@@ -100,7 +100,7 @@ class CrossSessionUpdatesTest extends TestCase
 
         $this->withSession(['demo_dealer_id' => $first->id]);
         $detail->call('$refresh')
-            ->assertSee('Dealer positions')
+            ->assertSee('Latest bid from each dealer')
             ->assertSee('aria-label="Down 1 position"', false)
             ->assertDontSee('New leader')
             ->assertSee('Bid history');
@@ -115,7 +115,9 @@ class CrossSessionUpdatesTest extends TestCase
             ->assertSee('▲')
             ->assertSee('▼')
             ->assertSee('text-green-700', false)
-            ->assertSee('text-red-700', false);
+            ->assertSee('text-red-700', false)
+            ->assertSee(Bid::query()->latest('id')->firstOrFail()->created_at->format('d M, H:i').' UTC')
+            ->assertDontSee('AED 21,000');
         $this->getJson(route('api.v1.listings.bids.index', $listing))->assertJsonCount(4, 'data');
 
         $this->withHeader('Idempotency-Key', 'same-leader-raise')
