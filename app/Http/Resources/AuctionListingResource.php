@@ -38,6 +38,8 @@ class AuctionListingResource extends JsonResource
             'mileage_km' => $this->mileage_km,
             'inspection_summary' => $this->inspection_summary,
             'plate_number' => $this->plate_number,
+            'photo_url' => $this->photoUrl(),
+            'photo_credit' => $this->photoCredit(),
         ];
     }
 }

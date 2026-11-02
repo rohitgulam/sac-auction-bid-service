@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['lot_number', 'kind', 'offer_type', 'title', 'subtitle', 'location', 'opening_amount_minor', 'vehicle_year', 'mileage_km', 'inspection_summary', 'plate_number', 'starts_at', 'ends_at'])]
+#[Fillable(['lot_number', 'kind', 'offer_type', 'title', 'subtitle', 'location', 'opening_amount_minor', 'vehicle_year', 'mileage_km', 'inspection_summary', 'plate_number', 'photo_key', 'starts_at', 'ends_at'])]
 class AuctionListing extends Model
 {
     /** @use HasFactory<AuctionListingFactory> */
@@ -54,5 +54,26 @@ class AuctionListing extends Model
         }
 
         return $this->bids()->orderByDesc('amount_minor')->orderByDesc('id')->first();
+    }
+
+    public function photoUrl(): ?string
+    {
+        if ($this->kind !== 'vehicle' || ! $this->photo_key || ! config('auction_photos.'.$this->photo_key)) {
+            return null;
+        }
+
+        $r2PublicUrl = config('filesystems.disks.r2.url');
+
+        return $r2PublicUrl
+            ? rtrim($r2PublicUrl, '/').'/vehicles/'.$this->photo_key.'.jpg'
+            : asset('images/vehicles/'.$this->photo_key.'.jpg');
+    }
+
+    /**
+     * @return array{model: string, photographer: string, source: string, license: string, license_url: string}|null
+     */
+    public function photoCredit(): ?array
+    {
+        return $this->photo_key ? config('auction_photos.'.$this->photo_key) : null;
     }
 }

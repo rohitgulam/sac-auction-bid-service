@@ -21,8 +21,9 @@ class AuctionListingFactory extends Factory
             'lot_number' => 'CAR-'.$this->faker->unique()->numerify('#####'),
             'kind' => 'vehicle',
             'offer_type' => 'live',
-            'title' => 'Aster Nova',
-            'subtitle' => 'Fictional inspected vehicle',
+            'title' => 'Toyota Corolla',
+            'subtitle' => 'Fictional inspected demo lot',
+            'photo_key' => 'corolla',
             'location' => 'North Yard',
             'opening_amount_minor' => 2_000_000,
             'vehicle_year' => 2023,
@@ -49,6 +50,7 @@ class AuctionListingFactory extends Factory
             'mileage_km' => null,
             'inspection_summary' => null,
             'plate_number' => 'DEMO '.$this->faker->unique()->numerify('####'),
+            'photo_key' => null,
         ]);
     }
 

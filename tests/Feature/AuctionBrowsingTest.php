@@ -31,8 +31,25 @@ class AuctionBrowsingTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Aster Nova')
+            ->assertSee('Toyota Corolla')
+            ->assertSee('images/vehicles/corolla.jpg')
             ->assertSee('Independent portfolio demonstration using fictional data.');
+    }
+
+    public function test_vehicle_photo_urls_use_local_assets_until_r2_is_configured(): void
+    {
+        $listing = AuctionListing::factory()->create();
+
+        $this->getJson('/api/v1/listings/'.$listing->id)
+            ->assertOk()
+            ->assertJsonPath('data.photo_url', asset('images/vehicles/corolla.jpg'))
+            ->assertJsonPath('data.photo_credit.license', 'CC0');
+
+        config()->set('filesystems.disks.r2.url', 'https://photos.example.test');
+
+        $this->getJson('/api/v1/listings/'.$listing->id)
+            ->assertOk()
+            ->assertJsonPath('data.photo_url', 'https://photos.example.test/vehicles/corolla.jpg');
     }
 
     public function test_seeded_inventory_has_vehicle_plate_and_offer_states(): void
@@ -77,7 +94,8 @@ class AuctionBrowsingTest extends TestCase
             ->assertOk()
             ->assertSee('Inspection summary')
             ->assertSee('Bid history')
-            ->assertSee('D-');
+            ->assertSee('D-')
+            ->assertSee('Representative photo:');
 
         $this->get(route('listings.show', $plate))
             ->assertOk()
@@ -97,7 +115,7 @@ class AuctionBrowsingTest extends TestCase
         Livewire::test(AuctionDashboard::class)
             ->set('kind', 'plate')
             ->assertSee('Demo plate 01')
-            ->assertDontSee('Aster Nova');
+            ->assertDontSee('Toyota Corolla');
     }
 
     public function test_seeded_high_bids_have_one_active_reservation_each(): void

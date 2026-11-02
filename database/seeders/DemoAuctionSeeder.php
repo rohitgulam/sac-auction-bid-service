@@ -27,19 +27,18 @@ class DemoAuctionSeeder extends Seeder
                 return $dealer;
             });
 
-            $vehicleNames = [
-                'Aster Nova', 'Orion Trail', 'Cobalt Vale', 'Mira Crest', 'Solace Ridge',
-                'Nexa Harbor', 'Vela Cross', 'Tarin Swift', 'Astra Morrow', 'Luma Field',
-            ];
+            $vehiclePhotos = collect(config('auction_photos'));
 
             for ($number = 1; $number <= 40; $number++) {
                 $offerType = $number <= 16 ? 'live' : 'deal';
                 $isClosed = $number > 32;
+                $photoKey = $vehiclePhotos->keys()[($number - 1) % $vehiclePhotos->count()];
                 $listing = AuctionListing::factory()->create([
                     'lot_number' => sprintf('CAR-%03d', $number),
                     'offer_type' => $offerType,
-                    'title' => $vehicleNames[($number - 1) % count($vehicleNames)],
-                    'subtitle' => sprintf('%d model · inspection summary', 2020 + ($number % 6)),
+                    'title' => $vehiclePhotos[$photoKey]['model'],
+                    'subtitle' => sprintf('%d model · inspected demo lot', 2020 + ($number % 6)),
+                    'photo_key' => $photoKey,
                     'location' => ['North Yard', 'Harbor Point', 'Central Depot'][$number % 3],
                     'opening_amount_minor' => (18_000 + $number * 750) * 100,
                     'vehicle_year' => 2020 + ($number % 6),
