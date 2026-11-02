@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 55432
+      DB_DATABASE: sac_auction_test
+      DB_USERNAME: sac_auction
+      DB_PASSWORD: ${{ github.run_id }}
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: sac_auction_test
+          POSTGRES_USER: sac_auction
+          POSTGRES_PASSWORD: ${{ github.run_id }}
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U sac_auction -d sac_auction_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_pgsql, pgsql, pcntl
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Install locked frontend dependencies
+        run: npm ci
+      - name: Prepare application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force --no-interaction
+      - name: Build frontend assets
+        run: npm run build
+      - name: Run PostgreSQL migrations
+        run: php artisan migrate --force --no-interaction
+      - name: Validate Composer metadata
+        run: composer validate --strict
+      - name: Check PHP formatting
+        run: vendor/bin/pint --test
+      - name: Run Laravel tests on PostgreSQL
+        run: php artisan test --compact
