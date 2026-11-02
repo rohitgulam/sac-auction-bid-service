@@ -6,6 +6,7 @@ use App\Actions\PlaceBid;
 use App\Models\AuctionListing;
 use App\Models\Dealer;
 use App\Policies\AuctionListingPolicy;
+use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -42,9 +43,25 @@ class ListingDetail extends Component
         }
 
         $validated = $this->validate([
-            'bidAmount' => ['required', 'integer', 'min:1', 'max:1000000000'],
+            'bidAmount' => [
+                'required',
+                static function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_string($value) || ! preg_match('/\A(?:[0-9]+|[1-9][0-9]{0,2}(?:,[0-9]{3})+)\z/', $value)) {
+                        $fail('Enter a whole AED amount using digits.');
+
+                        return;
+                    }
+
+                    $amountAed = (int) str_replace(',', '', $value);
+
+                    if ($amountAed < 1 || $amountAed > 1_000_000_000) {
+                        $fail('Enter an amount between AED 1 and AED 1,000,000,000.');
+                    }
+                },
+            ],
         ]);
-        $result = $placeBid->handle($dealer, $listing, (int) $validated['bidAmount'] * 100, $this->idempotencyKey);
+        $amountAed = (int) str_replace(',', '', $validated['bidAmount']);
+        $result = $placeBid->handle($dealer, $listing, $amountAed * 100, $this->idempotencyKey);
 
         if ($result->status === 201) {
             $this->bidFeedback = 'Bid accepted. You are now leading at AED '.number_format($result->body['bid']['amount_aed']).'.';

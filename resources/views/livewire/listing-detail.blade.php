@@ -69,7 +69,18 @@
                             <p class="mt-1 text-xs text-slate-500">Enter at least AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100) + 1) }}. Your leading bid reserves its full amount from your deposit.</p>
                             <div class="mt-3 flex gap-2">
                                 <span class="flex items-center border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-600">AED</span>
-                                <input id="bid-amount" type="number" inputmode="numeric" min="1" step="1" wire:model="bidAmount" class="min-w-0 flex-1 border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600" required>
+                                <input id="bid-amount" type="text" inputmode="numeric" autocomplete="off" wire:model="bidAmount" x-on:input="
+                                    const original = $el.value;
+                                    const before = $el.value.slice(0, $el.selectionStart).replace(/\D/g, '').length;
+                                    $el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                                    let position = 0, digits = 0;
+                                    while (position < $el.value.length && digits < before) {
+                                        if (/\d/.test($el.value[position])) digits++;
+                                        position++;
+                                    }
+                                    $el.setSelectionRange(position, position);
+                                    if ($el.value !== original) $el.dispatchEvent(new Event('input', { bubbles: true }));
+                                " class="min-w-0 flex-1 border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600" required>
                             </div>
                             @error('bidAmount') <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p> @enderror
                             <button type="submit" wire:loading.attr="disabled" class="mt-3 w-full bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">Place bid</button>

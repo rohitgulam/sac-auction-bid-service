@@ -274,7 +274,7 @@ class BidPlacementTest extends TestCase
 
         Livewire::test(ListingDetail::class, ['listing' => $listing])
             ->assertSee('Available limit')
-            ->set('bidAmount', '21000')
+            ->set('bidAmount', '21,000')
             ->call('submitBid')
             ->assertHasNoErrors()
             ->assertSee('Bid accepted')
@@ -300,6 +300,21 @@ class BidPlacementTest extends TestCase
 
         $this->assertSame(0, Bid::query()->count());
         $this->assertSame(0, BidReservation::query()->count());
+    }
+
+    public function test_listing_page_rejects_malformed_thousands_grouping(): void
+    {
+        $dealer = Dealer::factory()->create();
+        Wallet::factory()->create(['dealer_id' => $dealer->id]);
+        $listing = AuctionListing::factory()->create();
+        $this->withSession(['demo_dealer_id' => $dealer->id]);
+
+        Livewire::test(ListingDetail::class, ['listing' => $listing])
+            ->set('bidAmount', '21,00')
+            ->call('submitBid')
+            ->assertHasErrors(['bidAmount']);
+
+        $this->assertSame(0, Bid::query()->count());
     }
 
     public function test_active_reservations_on_other_listings_reduce_capacity_for_plate_bids(): void
