@@ -1,6 +1,6 @@
 # Auction Bid Service
 
-Independent portfolio demonstration using fictional auction and inspection data. The app provides a public Livewire auction browser, 40 demo vehicle lots across six real car models, 10 fictional number plate Listings, code-only Bid history, a passwordless Demo dealer chooser, and deposit-backed bidding. Vehicle photos are representative, not photos of the fictional auction lots. Demo deposit top-ups, polling, and animations are planned in later slices.
+Independent portfolio demonstration using fictional auction and inspection data. The app provides a public Livewire auction browser, 40 demo vehicle lots across six real car models, 10 fictional number plate Listings, code-only Bid history, a passwordless Demo dealer chooser, deposit-backed bidding, and simulated deposit top-ups. Vehicle photos are representative, not photos of the fictional auction lots. Polling and animations are planned in later slices.
 
 The project direction is recorded in [the product brief](auction-bid-service-product-brief.md), [build prompt](auction-bid-service-codex-cli-prompt.md), and [Laravel workflow](laravel-production-workflow.md).
 
@@ -17,11 +17,13 @@ The project direction is recorded in [the product brief](auction-bid-service-pro
 2. Run `composer install` and `npm ci`.
 3. Copy `.env.example` to `.env`. Set `DB_HOST`, `DB_PORT`, `DB_USERNAME`, and `DB_PASSWORD` for your local PostgreSQL role. The example uses port `55432`; change it if your server uses `5432`.
 4. Run `php artisan key:generate`, `php artisan migrate --seed`, and `npm run build`.
-5. Run `php artisan serve`, then open <http://localhost:8000>. Choose a Demo dealer, open a live Listing, and place a whole-AED bid above the current high bid. Open a second browser session with another code to outbid the first.
+5. Run `php artisan serve`, then open <http://localhost:8000>. Choose a Demo dealer, try an AED 10,000 or AED 50,000 simulated top-up in the wallet, then open a live Listing and place a whole-AED bid above the current high bid. Open a second browser session with another code to outbid the first.
 
 Laravel uses file sessions and cache plus a synchronous queue. The application database holds the seeded auction data.
 
 JSON endpoints are versioned under `/api/v1`. Public reads include `/api/v1/listings` and `/api/v1/listings/{listing}/bids`. A selected Demo dealer session is required for `GET /api/v1/wallet` and `POST /api/v1/listings/{listing}/bids`. The POST body is `{"amount_aed": 21000}` and requires an `Idempotency-Key` header. Accepted bids return HTTP 201 with the Bid and Wallet summary; business-rule rejections return HTTP 409 with a stable error code. Invalid input returns 422; missing selection returns 401.
+
+The same selected session can call `POST /api/v1/wallet/top-ups` with `{"amount_aed": 10000}` or `{"amount_aed": 50000}` and an `Idempotency-Key` header. The top-up is fictional: no card, bank, or payment details are collected. `GET /api/v1/wallet` includes top-up activity with amount and time. `app/Actions/TopUpWallet.php` locks the Wallet, credits it once, and stores the original response under a wallet-scoped unique key. A retry returns that response; a changed amount with the same key returns 409. Use a new key for a new top-up or a new bid attempt after topping up.
 
 ## Bid transaction
 

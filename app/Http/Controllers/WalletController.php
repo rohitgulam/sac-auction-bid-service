@@ -18,6 +18,10 @@ class WalletController extends Controller
             ], 401);
         }
 
-        return response()->json(['bidder_code' => $dealer->code, ...$dealer->wallet->summary()]);
+        return response()->json([
+            'bidder_code' => $dealer->code,
+            ...$dealer->wallet->summary(),
+            'activity' => $dealer->wallet->topUpActivity(),
+        ]);
     }
 }

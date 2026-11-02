@@ -278,11 +278,13 @@ class BidPlacementTest extends TestCase
             ->call('submitBid')
             ->assertHasNoErrors()
             ->assertSee('Bid accepted')
-            ->assertSee('AED 9,000')
+            ->assertDispatched('wallet-changed')
             ->assertSee($dealer->code);
 
         $this->getJson(route('api.v1.listings.show', $listing))
             ->assertJsonPath('data.high_bid_aed', 21_000);
+        $this->getJson(route('api.v1.wallet.show'))
+            ->assertJsonPath('available_aed', 9_000);
     }
 
     public function test_listing_page_shows_a_helpful_limit_error_without_changing_bid_history(): void

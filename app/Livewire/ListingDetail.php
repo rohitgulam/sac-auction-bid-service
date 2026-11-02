@@ -66,6 +66,7 @@ class ListingDetail extends Component
         if ($result->status === 201) {
             $this->bidFeedback = 'Bid accepted. You are now leading at AED '.number_format($result->body['bid']['amount_aed']).'.';
             $this->bidAmount = '';
+            $this->dispatch('wallet-changed');
         } else {
             $this->bidError = $result->body['error']['message'];
         }
@@ -75,12 +76,11 @@ class ListingDetail extends Component
 
     public function render(): View
     {
-        $dealer = Dealer::query()->with('wallet')->find(session('demo_dealer_id'));
+        $dealer = Dealer::query()->find(session('demo_dealer_id'));
 
         return view('livewire.listing-detail', [
             'listing' => AuctionListing::query()->with('bids.dealer')->findOrFail($this->listingId),
             'selectedDealer' => $dealer,
-            'walletSummary' => $dealer?->wallet?->summary(),
         ]);
     }
 }

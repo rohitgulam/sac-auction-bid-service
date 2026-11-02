@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\AuctionListing;
-use App\Models\Dealer;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -17,7 +16,6 @@ class AuctionDashboard extends Component
 
     public function render(): View
     {
-        $dealer = Dealer::query()->with('wallet')->find(session('demo_dealer_id'));
         $listings = AuctionListing::query()
             ->with('bids.dealer')
             ->when($this->kind !== 'all', fn ($query) => $query->where('kind', $this->kind))
@@ -32,8 +30,6 @@ class AuctionDashboard extends Component
             'listings' => $listings,
             'totalListings' => AuctionListing::query()->count(),
             'openListings' => AuctionListing::query()->open()->count(),
-            'selectedDealer' => $dealer,
-            'walletSummary' => $dealer?->wallet?->summary(),
         ]);
     }
 }
