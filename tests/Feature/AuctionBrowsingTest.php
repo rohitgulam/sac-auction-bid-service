@@ -28,6 +28,7 @@ class AuctionBrowsingTest extends TestCase
 
     public function test_new_session_opens_the_dashboard_as_the_default_demo_dealer(): void
     {
+        config()->set('filesystems.disks.r2.url', null);
         $this->seed();
 
         $this->get('/')
@@ -44,6 +45,7 @@ class AuctionBrowsingTest extends TestCase
 
     public function test_vehicle_photo_urls_use_local_assets_until_r2_is_configured(): void
     {
+        config()->set('filesystems.disks.r2.url', null);
         $listing = AuctionListing::factory()->create();
 
         $this->getJson('/api/v1/listings/'.$listing->id)
