@@ -77,7 +77,7 @@
                                 " class="min-w-0 flex-1 border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600" required>
                             </div>
                             @error('bidAmount') <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p> @enderror
-                            <button type="submit" wire:loading.attr="disabled" class="mt-3 w-full bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">Place bid</button>
+                            <button type="submit" wire:loading.attr="disabled" wire:target="submitBid" class="mt-3 w-full bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">Place bid</button>
                         </form>
                     @else
                         <p class="mt-5 border-t border-slate-200 pt-4 text-sm text-slate-600">Choose a demo dealer above to place a bid.</p>
