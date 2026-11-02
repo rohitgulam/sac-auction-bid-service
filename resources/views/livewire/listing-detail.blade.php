@@ -105,12 +105,10 @@
                                     <span class="w-6 shrink-0 font-bold text-navy">#{{ $standing['rank'] }}</span>
                                     <span class="min-w-0 flex-1"><strong class="text-navy">{{ $standing['bid']->dealer->code }}</strong>@if (session('demo_dealer_id') === $standing['bid']->dealer_id) <span class="text-xs font-bold text-blue-700">· You</span> @endif</span>
                                     <span class="text-right">
-                                        @if ($standing['movement'] === 'new')
-                                            <span class="block font-bold text-green-700"><span aria-hidden="true">↑</span> New leader</span>
-                                        @elseif ($standing['movement'] === 'up')
-                                            <span class="block font-bold text-green-700"><span aria-hidden="true">↑</span> Up {{ $standing['places'] }} {{ $standing['places'] === 1 ? 'place' : 'places' }}</span>
+                                        @if ($standing['movement'] === 'up')
+                                            <span class="block font-bold text-green-700" aria-label="Up {{ $standing['places'] }} {{ $standing['places'] === 1 ? 'position' : 'positions' }}"><span aria-hidden="true">▲</span> {{ $standing['places'] }}</span>
                                         @elseif ($standing['movement'] === 'down')
-                                            <span class="block font-bold text-red-700"><span aria-hidden="true">↓</span> Down {{ $standing['places'] }} {{ $standing['places'] === 1 ? 'place' : 'places' }}</span>
+                                            <span class="block font-bold text-red-700" aria-label="Down {{ $standing['places'] }} {{ $standing['places'] === 1 ? 'position' : 'positions' }}"><span aria-hidden="true">▼</span> {{ $standing['places'] }}</span>
                                         @endif
                                         <strong class="block text-xs text-navy">AED {{ number_format(intdiv($standing['bid']->amount_minor, 100)) }}</strong>
                                     </span>

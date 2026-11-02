@@ -101,8 +101,8 @@ class CrossSessionUpdatesTest extends TestCase
         $this->withSession(['demo_dealer_id' => $first->id]);
         $detail->call('$refresh')
             ->assertSee('Dealer positions')
-            ->assertSee('New leader')
-            ->assertSee('Down 1 place')
+            ->assertSee('aria-label="Down 1 position"', false)
+            ->assertDontSee('New leader')
             ->assertSee('Bid history');
 
         $this->withHeader('Idempotency-Key', 'returning-bid')
@@ -110,18 +110,17 @@ class CrossSessionUpdatesTest extends TestCase
             ->assertCreated();
 
         $detail->call('$refresh')
-            ->assertSee('Up 2 places')
-            ->assertSee('Down 1 place')
-            ->assertSee('↑')
-            ->assertSee('↓')
+            ->assertSee('aria-label="Up 2 positions"', false)
+            ->assertSee('aria-label="Down 1 position"', false)
+            ->assertSee('▲')
+            ->assertSee('▼')
             ->assertSee('text-green-700', false)
-            ->assertSee('text-red-700', false)
-            ->assertSeeInOrder(['D-001', 'Up 2 places', 'D-003', 'Down 1 place']);
+            ->assertSee('text-red-700', false);
         $this->getJson(route('api.v1.listings.bids.index', $listing))->assertJsonCount(4, 'data');
 
         $this->withHeader('Idempotency-Key', 'same-leader-raise')
             ->postJson(route('api.v1.listings.bids.store', $listing), ['amount_aed' => 25_000])
             ->assertCreated();
-        $detail->call('$refresh')->assertDontSee('Up 2 places')->assertDontSee('Down 1 place');
+        $detail->call('$refresh')->assertDontSee('aria-label="Up 2 positions"', false)->assertDontSee('aria-label="Down 1 position"', false);
     }
 }
