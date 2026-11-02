@@ -41,6 +41,17 @@
         </div>
 
         <div class="space-y-5">
+            @if ($walletSummary)
+                <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Demo wallet">
+                    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold text-navy">Your wallet</h2><span class="text-xs font-semibold text-blue-700">{{ $selectedDealer->code }}</span></div>
+                    <dl class="mt-3 text-sm">
+                        <div class="detail-row"><dt>Deposit</dt><dd>AED {{ number_format($walletSummary['deposit_aed']) }}</dd></div>
+                        <div class="detail-row"><dt>Active reservations</dt><dd>AED {{ number_format($walletSummary['reserved_aed']) }}</dd></div>
+                        <div class="detail-row"><dt>Available limit</dt><dd class="text-blue-700">AED {{ number_format($walletSummary['available_aed']) }}</dd></div>
+                    </dl>
+                </section>
+            @endif
+
             <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <p class="text-sm text-slate-500">{{ $highBid ? 'Current high bid' : 'Opening amount' }}</p>
                 <div class="mt-1 text-3xl font-bold text-navy">AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100)) }}</div>
@@ -51,6 +62,30 @@
                     <div class="detail-row"><dt>Offer type</dt><dd>{{ ucfirst($listing->offer_type) }} offer</dd></div>
                     <div class="detail-row"><dt>Closes</dt><dd>{{ $listing->ends_at->format('d M Y, H:i') }} UTC</dd></div>
                 </dl>
+                @if ($listing->isOpen())
+                    @if ($selectedDealer)
+                        <form wire:submit="submitBid" class="mt-5 border-t border-slate-200 pt-5">
+                            <label for="bid-amount" class="block text-sm font-semibold text-navy">Your bid in whole AED</label>
+                            <p class="mt-1 text-xs text-slate-500">Enter at least AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100) + 1) }}. Your leading bid reserves its full amount from your deposit.</p>
+                            <div class="mt-3 flex gap-2">
+                                <span class="flex items-center border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-600">AED</span>
+                                <input id="bid-amount" type="number" inputmode="numeric" min="1" step="1" wire:model="bidAmount" class="min-w-0 flex-1 border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600" required>
+                            </div>
+                            @error('bidAmount') <p class="mt-2 text-sm text-red-700" role="alert">{{ $message }}</p> @enderror
+                            <button type="submit" wire:loading.attr="disabled" class="mt-3 w-full bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">Place bid</button>
+                        </form>
+                    @else
+                        <p class="mt-5 border-t border-slate-200 pt-4 text-sm text-slate-600">Choose a demo dealer above to place a bid.</p>
+                    @endif
+                @else
+                    <p class="mt-5 border-t border-slate-200 pt-4 text-sm text-slate-600">Bidding has closed. The winning reservation remains active until settlement.</p>
+                @endif
+                @if ($bidFeedback)
+                    <p class="mt-3 border-l-4 border-blue-600 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800" role="status">{{ $bidFeedback }}</p>
+                @endif
+                @if ($bidError)
+                    <p class="mt-3 border-l-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ $bidError }}</p>
+                @endif
             </section>
             <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <h2 class="text-lg font-bold text-navy">Bid history</h2>

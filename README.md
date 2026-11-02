@@ -1,6 +1,6 @@
 # Auction Bid Service
 
-Independent portfolio demonstration using fictional auction and inspection data. The first slice provides a public Livewire auction browser, 40 demo vehicle lots across six real car models, 10 fictional number plate Listings, code-only Bid history, and a passwordless Demo dealer chooser. Vehicle photos are representative, not photos of the fictional auction lots. Bid placement and Wallet actions are planned in later slices.
+Independent portfolio demonstration using fictional auction and inspection data. The app provides a public Livewire auction browser, 40 demo vehicle lots across six real car models, 10 fictional number plate Listings, code-only Bid history, a passwordless Demo dealer chooser, and deposit-backed bidding. Vehicle photos are representative, not photos of the fictional auction lots. Demo deposit top-ups, polling, and animations are planned in later slices.
 
 The project direction is recorded in [the product brief](auction-bid-service-product-brief.md), [build prompt](auction-bid-service-codex-cli-prompt.md), and [Laravel workflow](laravel-production-workflow.md).
 
@@ -17,11 +17,29 @@ The project direction is recorded in [the product brief](auction-bid-service-pro
 2. Run `composer install` and `npm ci`.
 3. Copy `.env.example` to `.env`. Set `DB_HOST`, `DB_PORT`, `DB_USERNAME`, and `DB_PASSWORD` for your local PostgreSQL role. The example uses port `55432`; change it if your server uses `5432`.
 4. Run `php artisan key:generate`, `php artisan migrate --seed`, and `npm run build`.
-5. Run `php artisan serve`, then open <http://localhost:8000>. Browse Listings, inspect a vehicle or plate, and select a Demo dealer by Bidder code.
+5. Run `php artisan serve`, then open <http://localhost:8000>. Choose a Demo dealer, open a live Listing, and place a whole-AED bid above the current high bid. Open a second browser session with another code to outbid the first.
 
 Laravel uses file sessions and cache plus a synchronous queue. The application database holds the seeded auction data.
 
-Read-only JSON endpoints are versioned under `/api/v1`, including `/api/v1/listings` and `/api/v1/listings/{listing}/bids`.
+JSON endpoints are versioned under `/api/v1`. Public reads include `/api/v1/listings` and `/api/v1/listings/{listing}/bids`. A selected Demo dealer session is required for `GET /api/v1/wallet` and `POST /api/v1/listings/{listing}/bids`. The POST body is `{"amount_aed": 21000}` and requires an `Idempotency-Key` header. Accepted bids return HTTP 201 with the Bid and Wallet summary; business-rule rejections return HTTP 409 with a stable error code. Invalid input returns 422; missing selection returns 401.
+
+## Bid transaction
+
+`app/Actions/PlaceBid.php` owns the state change. `tests/Feature/BidPlacementTest.php` exercises it through HTTP and Livewire.
+
+```text
+POST bid → validate amount/key and selected dealer
+         → transaction: lock listing
+         → return stored result if key was used
+         → recheck closing time and high bid
+         → lock relevant wallets in dealer-ID order
+         → check deposit − other active reservations
+         → create bid, release old leader's reservation, reserve new leader's bid
+         → store accepted or rejected outcome by unique dealer/listing/key
+         → commit
+```
+
+Money is stored as integer AED fils. The available limit is deposit minus active reservations; raising your own high bid substitutes its old reservation when checking capacity. A closed winning bid stays reserved because settlement is outside the demo. PostgreSQL row locks and a partial unique index on active reservations protect the write path. The sequential feature tests demonstrate the rules and the absence of Bid or reservation side effects on rejection, but do not prove real concurrent lock behavior.
 
 ## Vehicle photos and optional R2 publishing
 
@@ -46,4 +64,4 @@ vendor/bin/pint --test
 npm run build
 ```
 
-`phpunit.xml` points database tests at `sac_auction_test` and PostgreSQL. It uses the local password from `.env`; each developer should set their own local credentials. Browsing and seed-data tests exist; bidding path and concurrency tests belong to the next slice.
+`phpunit.xml` points database tests at `sac_auction_test` and PostgreSQL. It uses the local password from `.env`; each developer should set their own local credentials.

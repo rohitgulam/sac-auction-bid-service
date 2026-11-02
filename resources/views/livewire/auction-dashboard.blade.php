@@ -13,6 +13,15 @@
         </div>
     </section>
 
+    @if ($walletSummary)
+        <section class="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3 border border-slate-200 bg-white px-5 py-4 text-sm" aria-label="Demo wallet">
+            <strong class="text-navy">{{ $selectedDealer->code }} wallet</strong>
+            <span class="text-slate-600">Deposit <strong class="ml-1 text-navy">AED {{ number_format($walletSummary['deposit_aed']) }}</strong></span>
+            <span class="text-slate-600">Reserved <strong class="ml-1 text-navy">AED {{ number_format($walletSummary['reserved_aed']) }}</strong></span>
+            <span class="text-slate-600">Available limit <strong class="ml-1 text-blue-700">AED {{ number_format($walletSummary['available_aed']) }}</strong></span>
+        </section>
+    @endif
+
     <section class="pt-6" aria-label="Listing filters">
         <div class="flex flex-wrap gap-x-5 gap-y-3 border-b border-slate-200">
             <button type="button" wire:click="$set('kind', 'all')" class="filter-tab {{ $kind === 'all' ? 'filter-tab-active' : '' }}">All lots</button>
