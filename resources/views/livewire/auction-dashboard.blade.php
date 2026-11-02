@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.2s>
     <section class="border-b border-slate-200 pb-6" aria-labelledby="listings-heading">
         <div class="flex flex-wrap items-end justify-between gap-5">
             <div>
@@ -32,7 +32,7 @@
         <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             @forelse ($listings as $listing)
                 @php($highBid = $listing->highBid())
-                <article wire:key="listing-{{ $listing->id }}" class="overflow-hidden border border-slate-200 bg-white shadow-sm">
+                <article wire:key="listing-{{ $listing->id }}" data-auction-card="{{ $listing->id }}" class="overflow-hidden border border-slate-200 bg-white shadow-sm">
                     <a href="{{ route('listings.show', $listing) }}" class="block focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-label="View {{ $listing->title }}">
                         @if ($listing->photoUrl())
                             <img src="{{ $listing->photoUrl() }}" alt="Representative photo of a {{ $listing->title }}" loading="lazy" class="h-44 w-full bg-slate-100 object-cover">
@@ -48,9 +48,12 @@
                         <h2 class="mt-2 text-lg font-bold text-navy"><a href="{{ route('listings.show', $listing) }}" class="hover:text-blue-700">{{ $listing->title }}</a></h2>
                         <p class="mt-0.5 text-sm text-slate-500">{{ $listing->subtitle }} · {{ $listing->location }}</p>
                         <div class="mt-4 flex items-end justify-between gap-3 border-t border-slate-100 pt-3">
-                            <div><span class="block text-xs text-slate-500">{{ $highBid ? 'Current high bid' : 'Opening amount' }}</span><strong class="text-xl text-navy">AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100)) }}</strong></div>
-                            <div class="text-right text-xs text-slate-500">{{ $listing->bids->count() }} bids<br>Ends {{ $listing->ends_at->format('d M, H:i') }} UTC</div>
+                            <div><span class="block text-xs text-slate-500">{{ $highBid ? 'Current high bid' : 'Opening amount' }}</span><strong data-live-key="card-{{ $listing->id }}-high" data-live-value="{{ $highBid?->amount_minor ?? $listing->opening_amount_minor }}" class="text-xl text-navy">AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100)) }}</strong><span data-live-key="card-{{ $listing->id }}-leader" data-live-value="{{ $highBid?->dealer_id ?? 'none' }}" aria-live="polite" class="block text-xs text-blue-700">@if ($highBid) Leader {{ $highBid->dealer->code }}@if (session('demo_dealer_id') === $highBid->dealer_id) · You @endif @else No leader yet @endif</span></div>
+                            <div class="text-right text-xs text-slate-500">{{ $listing->bids_count }} bids<br>Ends {{ $listing->ends_at->format('d M, H:i') }} UTC</div>
                         </div>
+                        @if ($listing->latest_bid_at)
+                            <p class="mt-2 text-xs font-semibold text-blue-700">Recent bid activity</p>
+                        @endif
                         <a href="{{ route('listings.show', $listing) }}" class="mt-4 inline-flex w-full items-center justify-center bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">View details <span class="ml-2" aria-hidden="true">→</span></a>
                     </div>
                 </article>

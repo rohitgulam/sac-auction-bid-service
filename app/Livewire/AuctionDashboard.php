@@ -17,12 +17,16 @@ class AuctionDashboard extends Component
     public function render(): View
     {
         $listings = AuctionListing::query()
-            ->with('bids.dealer')
+            ->select(['id', 'lot_number', 'kind', 'offer_type', 'title', 'subtitle', 'location', 'opening_amount_minor', 'photo_key', 'plate_number', 'starts_at', 'ends_at'])
+            ->withCount('bids')
+            ->withMax('bids as latest_bid_at', 'created_at')
+            ->with('leadingBid.dealer')
             ->when($this->kind !== 'all', fn ($query) => $query->where('kind', $this->kind))
             ->when($this->offer !== 'all', fn ($query) => $query->where('offer_type', $this->offer))
             ->when($this->status === 'open', fn ($query) => $query->open())
             ->when($this->status === 'closed', fn ($query) => $query->closed())
             ->orderByRaw('CASE WHEN ends_at > NOW() THEN 0 ELSE 1 END')
+            ->orderByRaw('latest_bid_at DESC NULLS LAST')
             ->orderBy('ends_at')
             ->get();
 

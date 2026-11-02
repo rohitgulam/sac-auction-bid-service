@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.2s>
     @if ($walletSummary)
         <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Demo wallet">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -6,9 +6,9 @@
                 <span class="text-xs font-semibold text-blue-700">{{ $dealer->code }}</span>
             </div>
             <dl class="mt-3 text-sm">
-                <div class="detail-row"><dt>Deposit</dt><dd>AED {{ number_format($walletSummary['deposit_aed']) }}</dd></div>
-                <div class="detail-row"><dt>Active reservations</dt><dd>AED {{ number_format($walletSummary['reserved_aed']) }}</dd></div>
-                <div class="detail-row"><dt>Available limit</dt><dd class="text-blue-700">AED {{ number_format($walletSummary['available_aed']) }}</dd></div>
+                <div class="detail-row"><dt>Deposit</dt><dd data-live-key="wallet-deposit" data-live-value="{{ $walletSummary['deposit_aed'] }}" aria-live="polite">AED {{ number_format($walletSummary['deposit_aed']) }}</dd></div>
+                <div class="detail-row"><dt>Active reservations</dt><dd data-live-key="wallet-reserved" data-live-value="{{ $walletSummary['reserved_aed'] }}" aria-live="polite">AED {{ number_format($walletSummary['reserved_aed']) }}</dd></div>
+                <div class="detail-row"><dt>Available limit</dt><dd data-live-key="wallet-available" data-live-value="{{ $walletSummary['available_aed'] }}" aria-live="polite" class="text-blue-700">AED {{ number_format($walletSummary['available_aed']) }}</dd></div>
             </dl>
             <div class="mt-5 border-t border-slate-200 pt-4">
                 <h3 class="text-sm font-bold text-navy">Simulate a deposit top-up</h3>

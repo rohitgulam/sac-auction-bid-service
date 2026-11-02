@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['lot_number', 'kind', 'offer_type', 'title', 'subtitle', 'location', 'opening_amount_minor', 'vehicle_year', 'mileage_km', 'inspection_summary', 'plate_number', 'photo_key', 'starts_at', 'ends_at'])]
 class AuctionListing extends Model
@@ -32,6 +33,11 @@ class AuctionListing extends Model
         return $this->hasMany(Bid::class);
     }
 
+    public function leadingBid(): HasOne
+    {
+        return $this->hasOne(Bid::class)->latestOfMany('amount_minor');
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('starts_at', '<=', now())->where('ends_at', '>', now());
@@ -49,6 +55,10 @@ class AuctionListing extends Model
 
     public function highBid(): ?Bid
     {
+        if ($this->relationLoaded('leadingBid')) {
+            return $this->leadingBid;
+        }
+
         if ($this->relationLoaded('bids')) {
             return $this->bids->sortByDesc('amount_minor')->first();
         }

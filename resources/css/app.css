@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+[x-cloak] { display: none !important; }
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
@@ -11,6 +13,11 @@
 }
 
 @layer components {
+    .auction-value-changed {
+        animation: auction-change 1.4s ease-out;
+        border-radius: 0.2rem;
+    }
+
     .filter-tab {
         @apply -mb-px border-b-2 border-transparent px-1 pb-3 text-sm font-semibold text-slate-500 transition hover:text-blue-700 focus:outline-none focus:text-blue-700;
     }
@@ -38,4 +45,13 @@
     .detail-row dd {
         @apply text-right font-semibold text-navy;
     }
+}
+
+@keyframes auction-change {
+    0%, 35% { background-color: #c9efff; box-shadow: 0 0 0 0.3rem #c9efff; }
+    100% { background-color: transparent; box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auction-value-changed { animation: none; }
 }

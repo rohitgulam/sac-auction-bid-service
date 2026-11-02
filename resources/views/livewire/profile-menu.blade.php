@@ -1,13 +1,13 @@
-<details x-data x-on:click.outside="$el.open = false" class="relative">
-    <summary aria-label="Open profile menu" class="flex cursor-pointer list-none items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 [&::-webkit-details-marker]:hidden">
+<div wire:poll.2s x-data="{ open: false }" x-on:click.outside="open = false" x-on:keydown.escape.window="open = false" class="relative">
+    <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open.toString()" aria-label="Open profile menu" class="flex cursor-pointer items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
         <img src="{{ asset('images/demo-dealer-avatar.svg') }}" alt="" class="h-10 w-10 rounded-full border border-blue-200 bg-blue-50 object-cover">
         <span class="hidden text-left sm:block">
             <strong class="block max-w-36 truncate text-sm leading-tight text-navy">{{ $dealer?->name ?? 'Demo account' }}</strong>
             <small class="block text-xs text-slate-500">{{ $dealer?->code ?? 'Choose a dealer' }}</small>
         </span>
         <svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-    </summary>
-    <div class="absolute right-0 z-50 mt-3 w-80 max-w-[calc(100vw-2.5rem)] border border-slate-200 bg-white shadow-lg">
+    </button>
+    <div x-cloak x-show="open" class="absolute right-0 z-50 mt-3 w-80 max-w-[calc(100vw-2.5rem)] border border-slate-200 bg-white shadow-lg">
         @if ($dealer)
             <div class="flex items-center gap-3 border-b border-slate-200 p-4">
                 <img src="{{ asset('images/demo-dealer-avatar.svg') }}" alt="Demo dealer avatar" class="h-12 w-12 rounded-full border border-blue-200 bg-blue-50 object-cover">
@@ -19,7 +19,7 @@
             <div class="border-b border-slate-200 px-4 py-3 text-sm">
                 <div class="flex justify-between gap-3"><span class="text-slate-500">Wallet account</span><strong class="text-navy">{{ $wallet ? '#'.str_pad((string) $wallet->id, 5, '0', STR_PAD_LEFT) : 'Unavailable' }}</strong></div>
                 @if ($availableLimitAed !== null)
-                    <div class="mt-1 flex justify-between gap-3"><span class="text-slate-500">Available limit</span><strong class="text-blue-700">AED {{ number_format($availableLimitAed) }}</strong></div>
+                    <div class="mt-1 flex justify-between gap-3"><span class="text-slate-500">Available limit</span><strong data-live-key="profile-available" data-live-value="{{ $availableLimitAed }}" class="text-blue-700">AED {{ number_format($availableLimitAed) }}</strong></div>
                 @endif
             </div>
             <a href="{{ route('wallet.manage') }}" class="block border-b border-slate-200 px-4 py-3 text-sm font-semibold text-navy hover:bg-blue-50 hover:text-blue-700">Wallet management →</a>
@@ -43,4 +43,4 @@
             </div>
         @endif
     </div>
-</details>
+</div>
