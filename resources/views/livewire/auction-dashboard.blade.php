@@ -4,7 +4,7 @@
             <div>
                 <p class="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">Auction inventory</p>
                 <h1 id="listings-heading" class="mt-1 text-3xl font-bold tracking-tight text-navy">Available listings</h1>
-                <p class="mt-2 text-sm text-slate-600">Browse inspected demo lots. Choose a demo dealer from the profile menu to take part.</p>
+                <p class="mt-2 text-sm text-slate-600">Browse inspected demo lots. Your demo dealer is ready; switch accounts from the profile menu.</p>
             </div>
             <div class="flex gap-5 text-sm">
                 <div><strong class="block text-xl text-navy">{{ $openListings }}</strong><span class="text-slate-500">Open now</span></div>

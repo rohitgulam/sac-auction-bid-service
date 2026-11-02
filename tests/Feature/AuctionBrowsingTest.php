@@ -26,7 +26,7 @@ class AuctionBrowsingTest extends TestCase
             ->assertJsonPath('data.0.currency', 'AED');
     }
 
-    public function test_visitor_can_browse_the_auction_without_selecting_a_dealer(): void
+    public function test_new_session_opens_the_dashboard_as_the_default_demo_dealer(): void
     {
         $this->seed();
 
@@ -34,7 +34,12 @@ class AuctionBrowsingTest extends TestCase
             ->assertOk()
             ->assertSee('Toyota Corolla')
             ->assertSee('images/vehicles/corolla.jpg')
+            ->assertSee('Dealer ID D-001')
             ->assertSee('Independent portfolio demonstration using fictional data.');
+
+        $this->getJson(route('api.v1.demo.dashboard'))
+            ->assertJsonPath('selected_bidder_code', 'D-001');
+        $this->get(route('wallet.manage'))->assertOk()->assertSee('Your wallet');
     }
 
     public function test_vehicle_photo_urls_use_local_assets_until_r2_is_configured(): void
@@ -161,11 +166,12 @@ class AuctionBrowsingTest extends TestCase
             ->assertOk()
             ->assertSeeHtml('aria-label="Open profile menu"')
             ->assertSee(route('wallet.manage'), false)
-            ->assertSee(route('demo.dealer'), false)
+            ->assertSee('Switch account')
+            ->assertSee('Dealer ID D-001')
             ->assertDontSee('Choose a bidder code');
         $this->get(route('wallet.manage'))
             ->assertOk()
-            ->assertSee('Choose a demo dealer to view and manage a wallet.');
+            ->assertSee('Your wallet');
         $this->get(route('demo.dealer'))
             ->assertOk()
             ->assertSee('Choose a bidder code')

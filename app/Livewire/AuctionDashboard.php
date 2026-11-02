@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Actions\EnsureOpenOffers;
+use App\Actions\SelectDemoDealer;
 use App\Models\AuctionListing;
+use App\Models\Dealer;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -15,9 +17,20 @@ class AuctionDashboard extends Component
 
     public string $status = 'all';
 
-    public function mount(EnsureOpenOffers $ensureOpenOffers): void
+    public function mount(EnsureOpenOffers $ensureOpenOffers, SelectDemoDealer $selectDemoDealer): void
     {
         $ensureOpenOffers->handle();
+
+        if (session()->has('demo_dealer_id')) {
+            return;
+        }
+
+        $defaultDealer = Dealer::query()->where('code', 'D-001')->whereHas('wallet')->first()
+            ?? Dealer::query()->whereHas('wallet')->orderBy('code')->first();
+
+        if ($defaultDealer) {
+            $selectDemoDealer->handle($defaultDealer);
+        }
     }
 
     public function render(): View

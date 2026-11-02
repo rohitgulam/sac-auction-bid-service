@@ -8,7 +8,7 @@ The [public Dealer Portal](https://dealers.sellanycar.com/#/en/home) is backgrou
 
 No deployed URL has been verified. After [local setup](#local-setup), open <http://localhost:8000>:
 
-1. Use the rounded avatar menu to choose a fictional dealer such as `D-001`. Open a **Live** or **Deal** listing and read its inspection summary, high bid, bidder code, and bid history.
+1. The app opens as fictional dealer `D-001` by default. Use the rounded avatar menu to switch dealers. Open a **Live** or **Deal** listing and read its inspection summary, high bid, bidder code, and bid history.
 2. Enter a whole-AED bid above the displayed high bid. The page shows the accepted bid and updated available limit. Try the same or a lower amount to see a business-rule error. The inventory page keeps wallet balances out of view.
 3. Open **Wallet management** from the avatar to see deposit, active reservations, available limit, and a simulated AED 10,000 or AED 50,000 top-up. No money moves.
 4. For a two-browser walkthrough, open the same listing in a second browser or private window, choose `D-002`, and outbid `D-001`. Return to the first window: polling updates the leader, “You” marker, history, and limit within roughly two seconds. On the inventory page, recent bid activity moves the listing card forward; changed values flash. Background tabs may pause polling until visible again.
