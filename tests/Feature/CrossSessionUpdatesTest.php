@@ -78,4 +78,50 @@ class CrossSessionUpdatesTest extends TestCase
         $profile->call('$refresh')->assertSee('AED 40,000');
         $detail->call('$refresh')->assertSee('AED 40,000');
     }
+
+    public function test_bid_history_shows_dealer_position_changes_without_losing_earlier_bids(): void
+    {
+        $first = Dealer::factory()->create(['code' => 'D-001']);
+        $second = Dealer::factory()->create(['code' => 'D-002']);
+        $third = Dealer::factory()->create(['code' => 'D-003']);
+        foreach ([$first, $second, $third] as $dealer) {
+            Wallet::factory()->create(['dealer_id' => $dealer->id, 'deposit_minor' => 10_000_000]);
+        }
+        $listing = AuctionListing::factory()->create();
+        $this->withSession(['demo_dealer_id' => $first->id]);
+        $detail = Livewire::test(ListingDetail::class, ['listing' => $listing]);
+
+        foreach ([[$first, 21_000], [$second, 22_000], [$third, 23_000]] as [$dealer, $amount]) {
+            $this->withSession(['demo_dealer_id' => $dealer->id])
+                ->withHeader('Idempotency-Key', 'bid-'.$amount)
+                ->postJson(route('api.v1.listings.bids.store', $listing), ['amount_aed' => $amount])
+                ->assertCreated();
+        }
+
+        $this->withSession(['demo_dealer_id' => $first->id]);
+        $detail->call('$refresh')
+            ->assertSee('Dealer positions')
+            ->assertSee('New leader')
+            ->assertSee('Down 1 place')
+            ->assertSee('Bid history');
+
+        $this->withHeader('Idempotency-Key', 'returning-bid')
+            ->postJson(route('api.v1.listings.bids.store', $listing), ['amount_aed' => 24_000])
+            ->assertCreated();
+
+        $detail->call('$refresh')
+            ->assertSee('Up 2 places')
+            ->assertSee('Down 1 place')
+            ->assertSee('↑')
+            ->assertSee('↓')
+            ->assertSee('text-green-700', false)
+            ->assertSee('text-red-700', false)
+            ->assertSeeInOrder(['D-001', 'Up 2 places', 'D-003', 'Down 1 place']);
+        $this->getJson(route('api.v1.listings.bids.index', $listing))->assertJsonCount(4, 'data');
+
+        $this->withHeader('Idempotency-Key', 'same-leader-raise')
+            ->postJson(route('api.v1.listings.bids.store', $listing), ['amount_aed' => 25_000])
+            ->assertCreated();
+        $detail->call('$refresh')->assertDontSee('Up 2 places')->assertDontSee('Down 1 place');
+    }
 }

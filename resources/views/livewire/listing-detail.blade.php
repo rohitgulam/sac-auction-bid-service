@@ -95,9 +95,33 @@
             <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <h2 class="text-lg font-bold text-navy">Bid history</h2>
                 <p class="mt-1 text-sm text-slate-500">Dealer codes keep demo identities private.</p>
+                @if ($standings->isNotEmpty())
+                    <div class="mt-4 border-y border-slate-100 py-4">
+                        <h3 class="text-sm font-bold text-navy">Dealer positions</h3>
+                        <p class="mt-1 text-xs text-slate-500">Movement after the latest accepted bid.</p>
+                        <ol class="mt-3 space-y-2" aria-live="polite">
+                            @foreach ($standings as $standing)
+                                <li wire:key="standing-{{ $standing['bid']->dealer_id }}" data-standing-row="{{ $standing['bid']->dealer_id }}" class="flex items-center gap-3 border border-slate-100 bg-slate-50 px-3 py-2 text-sm">
+                                    <span class="w-6 shrink-0 font-bold text-navy">#{{ $standing['rank'] }}</span>
+                                    <span class="min-w-0 flex-1"><strong class="text-navy">{{ $standing['bid']->dealer->code }}</strong>@if (session('demo_dealer_id') === $standing['bid']->dealer_id) <span class="text-xs font-bold text-blue-700">· You</span> @endif</span>
+                                    <span class="text-right">
+                                        @if ($standing['movement'] === 'new')
+                                            <span class="block font-bold text-green-700"><span aria-hidden="true">↑</span> New leader</span>
+                                        @elseif ($standing['movement'] === 'up')
+                                            <span class="block font-bold text-green-700"><span aria-hidden="true">↑</span> Up {{ $standing['places'] }} {{ $standing['places'] === 1 ? 'place' : 'places' }}</span>
+                                        @elseif ($standing['movement'] === 'down')
+                                            <span class="block font-bold text-red-700"><span aria-hidden="true">↓</span> Down {{ $standing['places'] }} {{ $standing['places'] === 1 ? 'place' : 'places' }}</span>
+                                        @endif
+                                        <strong class="block text-xs text-navy">AED {{ number_format(intdiv($standing['bid']->amount_minor, 100)) }}</strong>
+                                    </span>
+                                </li>
+                            @endforeach
+                        </ol>
+                    </div>
+                @endif
                 <div class="mt-3 divide-y divide-slate-100">
                     @forelse ($listing->bids->sortByDesc('amount_minor') as $bid)
-                        <div class="flex items-center justify-between gap-4 py-3 text-sm">
+                        <div wire:key="bid-history-{{ $bid->id }}" class="flex items-center justify-between gap-4 py-3 text-sm">
                             <div><strong class="text-navy">{{ $bid->dealer->code }}</strong>@if (session('demo_dealer_id') === $bid->dealer_id) <span class="text-xs font-bold text-blue-700">· You</span> @endif<span class="block text-xs text-slate-500">{{ $bid->created_at->format('d M, H:i') }} UTC</span></div>
                             <strong class="text-navy">AED {{ number_format(intdiv($bid->amount_minor, 100)) }}</strong>
                         </div>

@@ -3,16 +3,17 @@ const previousState = new Map();
 function registerAuctionAnimations() {
     window.Livewire.hook('morph', ({ el, component }) => {
         const values = new Map();
-        const cards = new Map();
+        const positions = new Map();
 
         el.querySelectorAll('[data-live-key]').forEach((value) => {
             values.set(value.dataset.liveKey, value.dataset.liveValue);
         });
-        el.querySelectorAll('[data-auction-card]').forEach((card) => {
-            cards.set(card.dataset.auctionCard, card.getBoundingClientRect());
+        el.querySelectorAll('[data-auction-card], [data-standing-row]').forEach((row) => {
+            const key = row.dataset.auctionCard ? `card:${row.dataset.auctionCard}` : `standing:${row.dataset.standingRow}`;
+            positions.set(key, row.getBoundingClientRect());
         });
 
-        previousState.set(component.id, { values, cards });
+        previousState.set(component.id, { values, positions });
     });
 
     window.Livewire.hook('morphed', ({ el, component }) => {
@@ -34,18 +35,27 @@ function registerAuctionAnimations() {
 
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-        el.querySelectorAll('[data-auction-card]').forEach((card) => {
-            const oldRect = before.cards.get(card.dataset.auctionCard);
+        el.querySelectorAll('[data-auction-card], [data-standing-row]').forEach((row) => {
+            const key = row.dataset.auctionCard ? `card:${row.dataset.auctionCard}` : `standing:${row.dataset.standingRow}`;
+            const oldRect = before.positions.get(key);
 
-            if (!oldRect) return;
+            if (!oldRect) {
+                if (row.dataset.standingRow) {
+                    row.animate([
+                        { opacity: 0, transform: 'translateY(-12px)' },
+                        { opacity: 1, transform: 'translateY(0)' },
+                    ], { duration: 400, easing: 'ease-out' });
+                }
+                return;
+            }
 
-            const newRect = card.getBoundingClientRect();
+            const newRect = row.getBoundingClientRect();
             const x = oldRect.left - newRect.left;
             const y = oldRect.top - newRect.top;
 
             if (Math.abs(x) < 1 && Math.abs(y) < 1) return;
 
-            card.animate([
+            row.animate([
                 { transform: `translate(${x}px, ${y}px)` },
                 { transform: 'translate(0, 0)' },
             ], { duration: 500, easing: 'ease-out' });

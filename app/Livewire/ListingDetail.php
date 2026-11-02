@@ -4,10 +4,12 @@ namespace App\Livewire;
 
 use App\Actions\PlaceBid;
 use App\Models\AuctionListing;
+use App\Models\Bid;
 use App\Models\Dealer;
 use App\Policies\AuctionListingPolicy;
 use Closure;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -77,11 +79,34 @@ class ListingDetail extends Component
     public function render(): View
     {
         $dealer = Dealer::query()->with('wallet')->find(session('demo_dealer_id'));
+        $listing = AuctionListing::query()->with('bids.dealer')->findOrFail($this->listingId);
 
         return view('livewire.listing-detail', [
-            'listing' => AuctionListing::query()->with('bids.dealer')->findOrFail($this->listingId),
+            'listing' => $listing,
             'selectedDealer' => $dealer,
             'availableLimitAed' => $dealer?->wallet?->summary()['available_aed'],
+            'standings' => $this->standings($listing->bids),
         ]);
+    }
+
+    /**
+     * @param  Collection<int, Bid>  $bids
+     * @return Collection<int, array{rank: int, bid: Bid, movement: string, places: int}>
+     */
+    private function standings(Collection $bids): Collection
+    {
+        $orderedBids = $bids->sortByDesc('amount_minor')->values();
+        $previousPositions = $orderedBids->skip(1)->unique('dealer_id')->values();
+
+        return $orderedBids->unique('dealer_id')->values()->map(function (Bid $bid, int $index) use ($previousPositions): array {
+            $previousIndex = $previousPositions->search(fn (Bid $previousBid): bool => $previousBid->dealer_id === $bid->dealer_id);
+
+            return [
+                'rank' => $index + 1,
+                'bid' => $bid,
+                'movement' => $previousIndex === false ? 'new' : ($previousIndex > $index ? 'up' : ($previousIndex < $index ? 'down' : 'same')),
+                'places' => $previousIndex === false ? 0 : abs($previousIndex - $index),
+            ];
+        });
     }
 }
