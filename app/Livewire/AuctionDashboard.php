@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Actions\EnsureOpenOffers;
 use App\Models\AuctionListing;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -13,6 +14,11 @@ class AuctionDashboard extends Component
     public string $offer = 'all';
 
     public string $status = 'all';
+
+    public function mount(EnsureOpenOffers $ensureOpenOffers): void
+    {
+        $ensureOpenOffers->handle();
+    }
 
     public function render(): View
     {
