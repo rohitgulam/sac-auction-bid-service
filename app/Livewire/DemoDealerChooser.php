@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Actions\SelectDemoDealer;
 use App\Models\Dealer;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
@@ -16,16 +17,14 @@ class DemoDealerChooser extends Component
         $this->code = (string) session('demo_dealer_code', '');
     }
 
-    public function selectDealer(): void
+    public function selectDealer(SelectDemoDealer $selectDemoDealer): void
     {
         $validated = $this->validate([
             'code' => ['required', 'string', Rule::exists('dealers', 'code')],
         ]);
 
         $dealer = Dealer::query()->where('code', $validated['code'])->firstOrFail();
-        session()->put('demo_dealer_id', $dealer->id);
-        session()->put('demo_dealer_code', $dealer->code);
-        session()->regenerate();
+        $selectDemoDealer->handle($dealer);
 
         $this->redirect(route('dashboard'));
     }

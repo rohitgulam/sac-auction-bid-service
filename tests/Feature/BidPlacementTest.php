@@ -273,12 +273,13 @@ class BidPlacementTest extends TestCase
         $this->withSession(['demo_dealer_id' => $dealer->id, 'demo_dealer_code' => $dealer->code]);
 
         Livewire::test(ListingDetail::class, ['listing' => $listing])
-            ->assertSee('Available limit')
+            ->assertSee('Available to bid')
             ->set('bidAmount', '21,000')
             ->call('submitBid')
             ->assertHasNoErrors()
             ->assertSee('Bid accepted')
             ->assertDispatched('wallet-changed')
+            ->assertSee('AED 9,000')
             ->assertSee($dealer->code);
 
         $this->getJson(route('api.v1.listings.show', $listing))

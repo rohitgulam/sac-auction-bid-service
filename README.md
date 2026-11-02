@@ -17,11 +17,11 @@ The project direction is recorded in [the product brief](auction-bid-service-pro
 2. Run `composer install` and `npm ci`.
 3. Copy `.env.example` to `.env`. Set `DB_HOST`, `DB_PORT`, `DB_USERNAME`, and `DB_PASSWORD` for your local PostgreSQL role. The example uses port `55432`; change it if your server uses `5432`.
 4. Run `php artisan key:generate`, `php artisan migrate --seed`, and `npm run build`.
-5. Run `php artisan serve`, then open <http://localhost:8000>. Use the profile icon at the top right to choose a Demo dealer. Open **Wallet management** from the same menu to try an AED 10,000 or AED 50,000 simulated top-up. Then open a live Listing and place a whole-AED bid above the current high bid. In a second browser session, use **Switch account** to choose another code and outbid the first.
+5. Run `php artisan serve`, then open <http://localhost:8000>. Use the rounded profile avatar at the top right to choose a Demo dealer. The avatar menu shows the fictional dealer name, bidder ID, and wallet account, and lets you switch codes. Open **Wallet management** there to try an AED 10,000 or AED 50,000 simulated top-up. Then open a live Listing and place a whole-AED bid above the current high bid. In a second browser session, choose another code and outbid the first.
 
 Laravel uses file sessions and cache plus a synchronous queue. The application database holds the seeded auction data.
 
-The dashboard and Listing pages show a read-only wallet summary. Simulated top-ups and wallet activity live on the Wallet management page; the dealer chooser lives on its own account page.
+The inventory dashboard does not show wallet balances. The bid form shows only the available limit needed to judge a bid. Full wallet balances, simulated top-ups, and wallet activity live on the Wallet management page. Public bid history displays bidder codes, not dealership names.
 
 JSON endpoints are versioned under `/api/v1`. Public reads include `/api/v1/listings` and `/api/v1/listings/{listing}/bids`. A selected Demo dealer session is required for `GET /api/v1/wallet` and `POST /api/v1/listings/{listing}/bids`. The POST body is `{"amount_aed": 21000}` and requires an `Idempotency-Key` header. Accepted bids return HTTP 201 with the Bid and Wallet summary; business-rule rejections return HTTP 409 with a stable error code. Invalid input returns 422; missing selection returns 401.
 

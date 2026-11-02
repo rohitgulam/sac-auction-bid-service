@@ -6,7 +6,6 @@ use App\Actions\TopUpWallet;
 use App\Models\Dealer;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 class DemoWallet extends Component
@@ -44,18 +43,12 @@ class DemoWallet extends Component
 
         if ($result->status === 201) {
             $this->feedback = 'Simulated AED '.number_format($amountAed).' top-up added.';
+            $this->dispatch('wallet-changed');
         } else {
             $this->error = $result->body['error']['message'];
         }
 
         $this->idempotencyKey = (string) Str::uuid();
-    }
-
-    #[On('wallet-changed')]
-    public function refreshWallet(): void
-    {
-        $this->feedback = null;
-        $this->error = null;
     }
 
     public function render(): View

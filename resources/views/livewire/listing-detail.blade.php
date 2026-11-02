@@ -41,8 +41,6 @@
         </div>
 
         <div class="space-y-5">
-            <livewire:wallet-summary />
-
             <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <p class="text-sm text-slate-500">{{ $highBid ? 'Current high bid' : 'Opening amount' }}</p>
                 <div class="mt-1 text-3xl font-bold text-navy">AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100)) }}</div>
@@ -58,6 +56,13 @@
                         <form wire:submit="submitBid" class="mt-5 border-t border-slate-200 pt-5">
                             <label for="bid-amount" class="block text-sm font-semibold text-navy">Your bid in whole AED</label>
                             <p class="mt-1 text-xs text-slate-500">Enter at least AED {{ number_format(intdiv($highBid?->amount_minor ?? $listing->opening_amount_minor, 100) + 1) }}. Your leading bid reserves its full amount from your deposit.</p>
+                            @if ($availableLimitAed !== null)
+                                <div class="mt-3 flex items-center justify-between gap-3 border-l-4 border-blue-600 bg-blue-50 px-3 py-2 text-sm">
+                                    <span class="text-slate-600">Available to bid</span>
+                                    <strong class="text-blue-700">AED {{ number_format($availableLimitAed) }}</strong>
+                                </div>
+                                <a href="{{ route('wallet.manage') }}" class="mt-1 inline-block text-xs font-semibold text-blue-700 hover:underline">Manage limit</a>
+                            @endif
                             <div class="mt-3 flex gap-2">
                                 <span class="flex items-center border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-600">AED</span>
                                 <input id="bid-amount" type="text" inputmode="numeric" autocomplete="off" wire:model="bidAmount" x-on:input="

@@ -76,11 +76,12 @@ class ListingDetail extends Component
 
     public function render(): View
     {
-        $dealer = Dealer::query()->find(session('demo_dealer_id'));
+        $dealer = Dealer::query()->with('wallet')->find(session('demo_dealer_id'));
 
         return view('livewire.listing-detail', [
             'listing' => AuctionListing::query()->with('bids.dealer')->findOrFail($this->listingId),
             'selectedDealer' => $dealer,
+            'availableLimitAed' => $dealer?->wallet?->summary()['available_aed'],
         ]);
     }
 }

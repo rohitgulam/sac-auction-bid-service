@@ -13,8 +13,6 @@
         </div>
     </section>
 
-    <div class="mt-5"><livewire:wallet-summary /></div>
-
     <section class="pt-6" aria-label="Listing filters">
         <div class="flex flex-wrap gap-x-5 gap-y-3 border-b border-slate-200">
             <button type="button" wire:click="$set('kind', 'all')" class="filter-tab {{ $kind === 'all' ? 'filter-tab-active' : '' }}">All lots</button>

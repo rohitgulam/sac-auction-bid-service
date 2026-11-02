@@ -16,12 +16,27 @@ class DemoAuctionSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function (): void {
+            $dealerNames = [
+                'Harborline Motors', 'Crescent Auto House', 'Blue Dune Trading', 'Northgate Vehicle Co',
+                'Palm Avenue Motors', 'Cedar Drive Autos', 'Marina Road Motors', 'Desert Bridge Auto',
+                'Atlas Lane Motors', 'Pearl Coast Trading', 'Summit Wheel House', 'Quartz Motor Group',
+                'Willow Park Auto', 'Ember Road Motors', 'Meridian Vehicle Co', 'Coastline Auto House',
+                'Copper Gate Motors', 'Skyline Motor Yard', 'Dunecrest Auto', 'Silver Harbor Motors',
+            ];
+
             if (AuctionListing::query()->exists()) {
+                foreach ($dealerNames as $index => $name) {
+                    Dealer::query()->where('code', sprintf('D-%03d', $index + 1))->update(['name' => $name]);
+                }
+
                 return;
             }
 
-            $dealers = collect(range(1, 20))->map(function (int $number): Dealer {
-                $dealer = Dealer::factory()->create(['code' => sprintf('D-%03d', $number)]);
+            $dealers = collect(range(1, 20))->map(function (int $number) use ($dealerNames): Dealer {
+                $dealer = Dealer::factory()->create([
+                    'code' => sprintf('D-%03d', $number),
+                    'name' => $dealerNames[$number - 1],
+                ]);
                 Wallet::factory()->create(['dealer_id' => $dealer->id]);
 
                 return $dealer;

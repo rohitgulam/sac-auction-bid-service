@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\DemoWallet;
-use App\Livewire\WalletSummary;
+use App\Livewire\ProfileMenu;
 use App\Models\AuctionListing;
 use App\Models\Bid;
 use App\Models\BidReservation;
@@ -130,6 +130,7 @@ class DemoWalletTopUpTest extends TestCase
             ->assertSee('Simulate a deposit top-up')
             ->assertSee('No payment or personal details are collected')
             ->call('topUp', 50_000)
+            ->assertDispatched('wallet-changed')
             ->assertSee('AED 70,000')
             ->assertSee('Simulated AED 50,000 top-up added')
             ->assertSee('Wallet activity')
@@ -201,19 +202,19 @@ class DemoWalletTopUpTest extends TestCase
         $listing = AuctionListing::factory()->create();
         $this->withSession(['demo_dealer_id' => $dealer->id]);
 
-        $this->get(route('dashboard'))->assertOk()->assertSee('Manage wallet')->assertDontSee('Simulate a deposit top-up');
-        $this->get(route('listings.show', $listing))->assertOk()->assertSee('Manage wallet')->assertDontSee('Simulate a deposit top-up');
+        $this->get(route('dashboard'))->assertOk()->assertDontSee('Your wallet')->assertDontSee('Simulate a deposit top-up');
+        $this->get(route('listings.show', $listing))->assertOk()->assertSee('Available to bid')->assertDontSee('Your wallet')->assertDontSee('Simulate a deposit top-up');
         $this->get(route('wallet.manage'))->assertOk()->assertSee('Simulate a deposit top-up');
     }
 
-    public function test_wallet_component_refreshes_after_a_bid_changes_reservations(): void
+    public function test_profile_menu_refreshes_wallet_limit_after_a_bid(): void
     {
         $dealer = Dealer::factory()->create();
         Wallet::factory()->create(['dealer_id' => $dealer->id, 'deposit_minor' => 3_000_000]);
         $listing = AuctionListing::factory()->create();
         $this->withSession(['demo_dealer_id' => $dealer->id]);
 
-        $component = Livewire::test(WalletSummary::class)->assertSee('AED 30,000');
+        $component = Livewire::test(ProfileMenu::class)->assertSee('AED 30,000');
         $this->withHeader('Idempotency-Key', 'bid-for-refresh')
             ->postJson(route('api.v1.listings.bids.store', $listing), ['amount_aed' => 21_000])
             ->assertCreated();

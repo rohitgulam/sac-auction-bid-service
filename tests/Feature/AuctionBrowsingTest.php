@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\AuctionDashboard;
 use App\Livewire\DemoDealerChooser;
+use App\Livewire\ProfileMenu;
 use App\Models\AuctionListing;
 use App\Models\BidReservation;
 use App\Models\Dealer;
@@ -105,7 +106,8 @@ class AuctionBrowsingTest extends TestCase
         $this->getJson('/api/v1/listings/'.$vehicle->id.'/bids')
             ->assertOk()
             ->assertJsonCount(2, 'data')
-            ->assertJsonStructure(['data' => [['bidder_code', 'amount_aed', 'currency']]]);
+            ->assertJsonStructure(['data' => [['bidder_code', 'amount_aed', 'currency']]])
+            ->assertDontSee($vehicle->bids()->firstOrFail()->dealer->name);
     }
 
     public function test_visitor_can_filter_the_auction_floor_to_plates(): void
@@ -180,7 +182,51 @@ class AuctionBrowsingTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Switch account')
-            ->assertSee('D-014');
+            ->assertSee('D-014')
+            ->assertSee($dealer->name)
+            ->assertSee('demo-dealer-avatar.svg')
+            ->assertDontSee('Your wallet');
+    }
+
+    public function test_profile_dropdown_shows_wallet_account_and_switches_to_another_dealer(): void
+    {
+        $this->seed();
+        $first = Dealer::query()->where('code', 'D-010')->firstOrFail();
+        $second = Dealer::query()->where('code', 'D-020')->firstOrFail();
+        $this->withSession(['demo_dealer_id' => $first->id, 'demo_dealer_code' => $first->code]);
+
+        Livewire::test(ProfileMenu::class)
+            ->assertSee($first->name)
+            ->assertSee('Dealer ID D-010')
+            ->assertSee('Wallet account')
+            ->assertSee('Available limit')
+            ->set('switchToCode', 'D-020')
+            ->call('switchDealer')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('dashboard'));
+
+        $this->getJson(route('api.v1.demo.dashboard'))
+            ->assertJsonPath('selected_bidder_code', $second->code);
+        $this->get(route('dashboard'))->assertSee($second->name);
+    }
+
+    public function test_profile_switcher_rejects_current_or_unknown_dealer_code(): void
+    {
+        $this->seed();
+        $dealer = Dealer::query()->where('code', 'D-010')->firstOrFail();
+        $this->withSession(['demo_dealer_id' => $dealer->id, 'demo_dealer_code' => $dealer->code]);
+
+        Livewire::test(ProfileMenu::class)
+            ->set('switchToCode', 'D-010')
+            ->call('switchDealer')
+            ->assertHasErrors(['switchToCode']);
+        Livewire::test(ProfileMenu::class)
+            ->set('switchToCode', 'UNKNOWN')
+            ->call('switchDealer')
+            ->assertHasErrors(['switchToCode']);
+
+        $this->getJson(route('api.v1.demo.dashboard'))
+            ->assertJsonPath('selected_bidder_code', 'D-010');
     }
 
     public function test_switch_account_page_replaces_selected_demo_dealer(): void

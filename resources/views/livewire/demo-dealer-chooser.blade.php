@@ -9,7 +9,7 @@
             <select id="dealer-code" wire:model="code" class="mt-2 w-full border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600">
                 <option value="">Choose a bidder code</option>
                 @foreach ($dealers as $dealer)
-                    <option value="{{ $dealer->code }}">{{ $dealer->code }}</option>
+                    <option value="{{ $dealer->code }}">{{ $dealer->name }} · {{ $dealer->code }}</option>
                 @endforeach
             </select>
             @error('code') <p class="mt-2 text-sm text-red-700" role="alert">Choose a valid demo dealer code.</p> @enderror

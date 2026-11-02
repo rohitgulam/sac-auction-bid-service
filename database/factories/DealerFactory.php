@@ -19,6 +19,7 @@ class DealerFactory extends Factory
     {
         return [
             'code' => 'D-'.$this->faker->unique()->numerify('###'),
+            'name' => $this->faker->company(),
         ];
     }
 }
