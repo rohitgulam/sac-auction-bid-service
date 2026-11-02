@@ -25,6 +25,7 @@ class DemoDealerChooser extends Component
         $dealer = Dealer::query()->where('code', $validated['code'])->firstOrFail();
         session()->put('demo_dealer_id', $dealer->id);
         session()->put('demo_dealer_code', $dealer->code);
+        session()->regenerate();
 
         $this->redirect(route('dashboard'));
     }

@@ -41,7 +41,7 @@
         </div>
 
         <div class="space-y-5">
-            <livewire:demo-wallet />
+            <livewire:wallet-summary />
 
             <section class="border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <p class="text-sm text-slate-500">{{ $highBid ? 'Current high bid' : 'Opening amount' }}</p>

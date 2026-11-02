@@ -151,6 +151,57 @@ class AuctionBrowsingTest extends TestCase
             ->assertJsonPath('selected_bidder_code', 'D-014');
     }
 
+    public function test_profile_menu_leads_to_wallet_management_and_account_selection(): void
+    {
+        $this->seed();
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSeeHtml('aria-label="Open profile menu"')
+            ->assertSee(route('wallet.manage'), false)
+            ->assertSee(route('demo.dealer'), false)
+            ->assertDontSee('Choose a bidder code');
+        $this->get(route('wallet.manage'))
+            ->assertOk()
+            ->assertSee('Choose a demo dealer to view and manage a wallet.');
+        $this->get(route('demo.dealer'))
+            ->assertOk()
+            ->assertSee('Choose a bidder code')
+            ->assertSee('D-001')
+            ->assertSee('D-020');
+    }
+
+    public function test_selected_dealer_profile_menu_offers_account_switching(): void
+    {
+        $this->seed();
+        $dealer = Dealer::query()->where('code', 'D-014')->firstOrFail();
+
+        $this->withSession(['demo_dealer_id' => $dealer->id, 'demo_dealer_code' => $dealer->code])
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Switch account')
+            ->assertSee('D-014');
+    }
+
+    public function test_switch_account_page_replaces_selected_demo_dealer(): void
+    {
+        $this->seed();
+
+        Livewire::test(DemoDealerChooser::class)
+            ->set('code', 'D-001')
+            ->call('selectDealer')
+            ->assertHasNoErrors();
+        $this->getJson(route('api.v1.demo.dashboard'))
+            ->assertJsonPath('selected_bidder_code', 'D-001');
+
+        Livewire::test(DemoDealerChooser::class)
+            ->set('code', 'D-020')
+            ->call('selectDealer')
+            ->assertHasNoErrors();
+        $this->getJson(route('api.v1.demo.dashboard'))
+            ->assertJsonPath('selected_bidder_code', 'D-020');
+    }
+
     public function test_invalid_dealer_code_cannot_be_selected(): void
     {
         $this->seed();

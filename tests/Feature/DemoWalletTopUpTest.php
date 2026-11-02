@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\DemoWallet;
+use App\Livewire\WalletSummary;
 use App\Models\AuctionListing;
 use App\Models\Bid;
 use App\Models\BidReservation;
@@ -193,15 +194,16 @@ class DemoWalletTopUpTest extends TestCase
         $this->assertSame(1, BidReservation::query()->whereNull('released_at')->count());
     }
 
-    public function test_top_up_controls_are_visible_on_dashboard_and_listing_for_selected_dealer(): void
+    public function test_top_up_controls_live_only_on_wallet_management_page(): void
     {
         $dealer = Dealer::factory()->create();
         Wallet::factory()->create(['dealer_id' => $dealer->id]);
         $listing = AuctionListing::factory()->create();
         $this->withSession(['demo_dealer_id' => $dealer->id]);
 
-        $this->get(route('dashboard'))->assertOk()->assertSee('Simulate a deposit top-up');
-        $this->get(route('listings.show', $listing))->assertOk()->assertSee('Simulate a deposit top-up');
+        $this->get(route('dashboard'))->assertOk()->assertSee('Manage wallet')->assertDontSee('Simulate a deposit top-up');
+        $this->get(route('listings.show', $listing))->assertOk()->assertSee('Manage wallet')->assertDontSee('Simulate a deposit top-up');
+        $this->get(route('wallet.manage'))->assertOk()->assertSee('Simulate a deposit top-up');
     }
 
     public function test_wallet_component_refreshes_after_a_bid_changes_reservations(): void
@@ -211,7 +213,7 @@ class DemoWalletTopUpTest extends TestCase
         $listing = AuctionListing::factory()->create();
         $this->withSession(['demo_dealer_id' => $dealer->id]);
 
-        $component = Livewire::test(DemoWallet::class)->assertSee('AED 30,000');
+        $component = Livewire::test(WalletSummary::class)->assertSee('AED 30,000');
         $this->withHeader('Idempotency-Key', 'bid-for-refresh')
             ->postJson(route('api.v1.listings.bids.store', $listing), ['amount_aed' => 21_000])
             ->assertCreated();
