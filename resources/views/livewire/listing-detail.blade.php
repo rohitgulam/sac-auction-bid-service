@@ -48,6 +48,13 @@
                 <dl class="mt-5 border-t border-slate-200 text-sm">
                     <div class="detail-row"><dt>Offer type</dt><dd>{{ ucfirst($listing->offer_type) }} offer</dd></div>
                     <div class="detail-row"><dt>Closes</dt><dd>{{ $listing->ends_at->format('d M Y, H:i') }} UTC</dd></div>
+                    @if ($listing->isOpen())
+                        <div class="detail-row" data-deadline="{{ $listing->ends_at->copy()->utc()->toIso8601String() }}" x-data="auctionCountdown($el.dataset.deadline)">
+                            <dt>Time remaining</dt><dd role="timer" x-text="label">Calculating…</dd>
+                        </div>
+                    @else
+                        <div class="detail-row"><dt>Time remaining</dt><dd>Closed</dd></div>
+                    @endif
                 </dl>
                 @if ($listing->isOpen())
                     @if ($selectedDealer)

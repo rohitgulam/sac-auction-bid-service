@@ -1,5 +1,42 @@
 const previousState = new Map();
 
+function registerCountdown() {
+    window.Alpine.data('auctionCountdown', (deadline) => ({
+        deadline: Date.parse(deadline),
+        remainingSeconds: 0,
+        intervalId: null,
+
+        init() {
+            this.update();
+            this.intervalId = window.setInterval(() => this.update(), 1000);
+        },
+
+        destroy() {
+            window.clearInterval(this.intervalId);
+        },
+
+        update() {
+            this.remainingSeconds = Math.max(0, Math.ceil((this.deadline - Date.now()) / 1000));
+        },
+
+        get label() {
+            if (this.remainingSeconds === 0) return 'Closed';
+
+            const days = Math.floor(this.remainingSeconds / 86400);
+            const hours = Math.floor((this.remainingSeconds % 86400) / 3600);
+            const minutes = Math.floor((this.remainingSeconds % 3600) / 60);
+            const seconds = this.remainingSeconds % 60;
+
+            return [
+                days > 0 ? `${days}d` : null,
+                days > 0 || hours > 0 ? `${hours}h` : null,
+                `${minutes}m`,
+                `${String(seconds).padStart(2, '0')}s`,
+            ].filter(Boolean).join(' ');
+        },
+    }));
+}
+
 function registerAuctionAnimations() {
     window.Livewire.hook('morph', ({ el, component }) => {
         const values = new Map();
@@ -67,4 +104,10 @@ if (window.Livewire) {
     registerAuctionAnimations();
 } else {
     document.addEventListener('livewire:init', registerAuctionAnimations, { once: true });
+}
+
+if (window.Alpine) {
+    registerCountdown();
+} else {
+    document.addEventListener('alpine:init', registerCountdown, { once: true });
 }

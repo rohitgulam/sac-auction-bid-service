@@ -79,6 +79,24 @@ class AuctionBrowsingTest extends TestCase
             ->assertJsonPath('data.status', 'open');
     }
 
+    public function test_listing_page_shows_a_countdown_for_open_offers_and_closed_state_after_expiry(): void
+    {
+        $openListing = AuctionListing::factory()->create(['ends_at' => now()->addMinutes(11)]);
+        $closedListing = AuctionListing::factory()->closed()->create();
+
+        $this->get(route('listings.show', $openListing))
+            ->assertOk()
+            ->assertSee('Time remaining')
+            ->assertSee('data-deadline="'.$openListing->ends_at->copy()->utc()->toIso8601String().'"', false)
+            ->assertSee('x-data="auctionCountdown($el.dataset.deadline)"', false);
+
+        $this->get(route('listings.show', $closedListing))
+            ->assertOk()
+            ->assertSee('Time remaining')
+            ->assertSee('<dd>Closed</dd>', false)
+            ->assertDontSee('auctionCountdown');
+    }
+
     public function test_seeded_offer_windows_have_the_agreed_duration(): void
     {
         $this->seed();
