@@ -33,11 +33,11 @@ class DemoAuctionSeeder extends Seeder
             }
 
             $dealers = collect(range(1, 20))->map(function (int $number) use ($dealerNames): Dealer {
-                $dealer = Dealer::factory()->create([
+                $dealer = Dealer::query()->create([
                     'code' => sprintf('D-%03d', $number),
                     'name' => $dealerNames[$number - 1],
                 ]);
-                Wallet::factory()->create(['dealer_id' => $dealer->id]);
+                Wallet::query()->create(['dealer_id' => $dealer->id, 'deposit_minor' => 100_000_000]);
 
                 return $dealer;
             });
@@ -48,8 +48,9 @@ class DemoAuctionSeeder extends Seeder
                 $offerType = $number <= 16 ? 'live' : 'deal';
                 $isClosed = $number > 32;
                 $photoKey = $vehiclePhotos->keys()[($number - 1) % $vehiclePhotos->count()];
-                $listing = AuctionListing::factory()->create([
+                $listing = AuctionListing::query()->create([
                     'lot_number' => sprintf('CAR-%03d', $number),
+                    'kind' => 'vehicle',
                     'offer_type' => $offerType,
                     'title' => $vehiclePhotos[$photoKey]['model'],
                     'subtitle' => sprintf('%d model · inspected demo lot', 2020 + ($number % 6)),
@@ -74,8 +75,9 @@ class DemoAuctionSeeder extends Seeder
             for ($number = 1; $number <= 10; $number++) {
                 $offerType = $number <= 4 ? 'live' : 'deal';
                 $isClosed = $number > 8;
-                $listing = AuctionListing::factory()->plate()->create([
+                $listing = AuctionListing::query()->create([
                     'lot_number' => sprintf('PLT-%03d', $number),
+                    'kind' => 'plate',
                     'offer_type' => $offerType,
                     'title' => sprintf('Demo plate %02d', $number),
                     'subtitle' => 'Fictional display plate',
@@ -120,29 +122,43 @@ class DemoAuctionSeeder extends Seeder
         $firstBidTime = $listing->starts_at->copy()->addSeconds(20);
         $secondBidTime = $listing->starts_at->copy()->addSeconds(40);
 
-        $firstBid = Bid::factory()->create([
+        $firstBid = new Bid([
             'auction_listing_id' => $listing->id,
             'dealer_id' => $firstDealer->id,
             'amount_minor' => $listing->opening_amount_minor + 100_000,
-            'created_at' => $firstBidTime,
-            'updated_at' => $firstBidTime,
         ]);
-        BidReservation::factory()->forBid($firstBid)->create([
-            'released_at' => $secondBidTime,
-            'created_at' => $firstBidTime,
-            'updated_at' => $secondBidTime,
-        ]);
+        $firstBid->created_at = $firstBidTime;
+        $firstBid->updated_at = $firstBidTime;
+        $firstBid->save();
 
-        $secondBid = Bid::factory()->create([
+        $firstReservation = new BidReservation([
+            'bid_id' => $firstBid->id,
+            'auction_listing_id' => $listing->id,
+            'dealer_id' => $firstDealer->id,
+            'amount_minor' => $firstBid->amount_minor,
+            'released_at' => $secondBidTime,
+        ]);
+        $firstReservation->created_at = $firstBidTime;
+        $firstReservation->updated_at = $secondBidTime;
+        $firstReservation->save();
+
+        $secondBid = new Bid([
             'auction_listing_id' => $listing->id,
             'dealer_id' => $secondDealer->id,
             'amount_minor' => $listing->opening_amount_minor + 200_000,
-            'created_at' => $secondBidTime,
-            'updated_at' => $secondBidTime,
         ]);
-        BidReservation::factory()->forBid($secondBid)->create([
-            'created_at' => $secondBidTime,
-            'updated_at' => $secondBidTime,
+        $secondBid->created_at = $secondBidTime;
+        $secondBid->updated_at = $secondBidTime;
+        $secondBid->save();
+
+        $secondReservation = new BidReservation([
+            'bid_id' => $secondBid->id,
+            'auction_listing_id' => $listing->id,
+            'dealer_id' => $secondDealer->id,
+            'amount_minor' => $secondBid->amount_minor,
         ]);
+        $secondReservation->created_at = $secondBidTime;
+        $secondReservation->updated_at = $secondBidTime;
+        $secondReservation->save();
     }
 }
