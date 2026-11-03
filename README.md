@@ -46,8 +46,8 @@ Laravel uses file sessions and cache plus a synchronous queue. The application d
 The production Compose file runs PHP 8.4/Apache and PostgreSQL 17 separately from the local development stack. The application listens only on `127.0.0.1:8088`; PostgreSQL has no published port. On a VPS with host Nginx already serving other sites, add a new virtual host instead of replacing the existing configuration.
 
 ```sh
-git clone https://github.com/rohitgulam/auction-bid-service.git
-cd auction-bid-service
+git clone https://github.com/rohitgulam/sac-auction-bid-service.git
+cd sac-auction-bid-service
 umask 077
 cp .env.example .env.production
 openssl rand -base64 32 # Prefix this value with base64: for APP_KEY.
