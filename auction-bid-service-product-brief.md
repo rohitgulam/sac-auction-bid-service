@@ -30,9 +30,10 @@ A dealer-facing web application for bidding on inspected vehicles, backed by a s
 
 ## What a reviewer can do
 
-1. Open a seeded demo account.
+1. Choose a seeded demo dealer from a clearly labelled demo login screen.
 2. See the dealer's deposit, reserved amount, and available bidding limit.
-3. Open an inspected vehicle listing and view concise condition-report data.
+   Increase the fictional deposit with a clearly labelled demo top-up.
+3. Open an inspected vehicle listing or a number plate listing and view its concise details.
 4. Place a bid.
 5. See the current highest bid update and the wallet reservation change.
 6. Try an invalid bid:
@@ -45,31 +46,41 @@ A dealer-facing web application for bidding on inspected vehicles, backed by a s
 
 ### Must build
 
-- One dealer demo account.
-- Three seeded vehicles: an open live auction, an open deal auction, and a closed auction.
-- Listing detail with price, end time, inspection highlights, and bid form.
+- At least 20 seeded demo dealers, selectable by bidder code into separate browser sessions without passwords. Do not show dealer names in the UI.
+- Visitors can browse listings without selecting a dealer. Bidding, demo top-ups, and wallet access require a selected dealer in that browser session.
+- Fifty initially seeded listings: 40 fictional vehicles and 10 fictional number plates, spanning open live auctions, open deal auctions, and closed auctions. Live Offers last 12 minutes; Deal Offers last 72 hours. When a visitor opens the dashboard and no listing of an offer type remains open, create a fresh listing of that type. Retain closed listings and bid history; do not require cron or a daily reset.
+- Seed fictional bid histories and active reservations on some listings, leaving others open with no bids so reviewers can inspect both states immediately.
+- Listing detail with price, end time, a bid form, and either vehicle inspection highlights or number plate details.
 - Wallet summary: deposit, amount reserved, available limit.
+- An immediate simulated AED 10,000 or AED 50,000 deposit top-up that increases the selected dealer's available limit, appears in wallet activity, and collects no payment details or money.
+- Idempotent demo top-ups: retrying the same top-up request credits the deposit once and returns the original result.
 - Bid placement with transaction safety.
 - Bid history.
+- Public bid history uses stable bidder codes, such as `D-014`, instead of dealer names; the selected dealer's own bids are also marked “You”.
+- Livewire polling so every open demo session can see bid and wallet changes within a few seconds; two browsers are only a simple review scenario, not a limit. Animate changed high bids, leader labels, and wallet amounts; reorder listing cards by recent bid activity with visible movement.
 - Focused tests and a clear README.
 
 ### Explicitly do not build
 
-- Real payments, payment-proof uploads, bank integrations, VAT invoices, delivery, authentication flows, notifications, vehicle image storage, real-time sockets, or a valuation algorithm.
+- Real payments, payment-proof uploads, bank integrations, VAT invoices, delivery, production authentication, notifications, vehicle image storage, real-time sockets, or a valuation algorithm. The demo top-up is explicitly simulated.
 - Any claim that the app reproduces SellAnyCar's actual systems.
 
 ## Business rules
 
-1. A dealer's available limit is `deposit - total active reservations`.
+1. Monetary amounts are in AED. A dealer's available limit is `deposit - total active reservations`.
 2. A bid must be greater than the current highest bid.
-3. A bid cannot exceed the dealer's available limit.
+3. A new leading bid cannot make the dealer's total active reservations exceed the deposit. When the dealer raises their own leading bid, replace their existing reservation for that listing when checking this limit; the wallet's displayed available limit remains `deposit - total active reservations`.
 4. A bid cannot be accepted after the auction closes.
 5. When a bid becomes the highest:
    - reserve that bid amount for the new highest bidder;
    - release the immediately displaced highest bidder's reservation;
    - preserve the bid history.
-6. A repeated request with the same idempotency key must return the original outcome without creating a second bid or reservation.
-7. A failed request must not leave a partial reservation or bid.
+   A winning reservation remains active when the listing closes, until a separate settlement or demo reset.
+6. A repeated request with the same idempotency key must return the original accepted or business-rule-rejected outcome without creating a second bid or reservation. A dealer who changes their wallet or bid amount must use a new key for a new attempt.
+7. A failed request must not leave a partial reservation or bid. A stored rejection outcome is not a bid or reservation.
+8. Vehicle and number plate listings use the same bid, reservation, closing-time, and idempotency rules; only their descriptive details differ.
+9. A last-second bid does not extend a listing's fixed closing time. The server decides acceptance using the listing's end time.
+10. Enter and display bids in whole AED; a new bid must increase the current high bid by at least AED 1. Store money without floating-point arithmetic.
 
 ## Backend design
 
@@ -128,6 +139,40 @@ Do **not** copy the SellAnyCar logo, name, assets, proprietary-looking data, or 
 - Docker setup or a one-command local setup, if time permits.
 - Readme with architecture, tradeoffs, running instructions, and test command.
 
+## Repository and review workflow
+
+The live URL is for a recruiter; the repository must let an engineering reviewer verify how the feature was built. Treat the Git history, pull requests, CI checks, tests, and documentation as part of the deliverable.
+
+### Keep the change history reviewable
+
+Use a protected-quality `main` branch and build through small, coherent feature branches. Do not manufacture a long history or meaningless commits after the fact. Three honest, reviewable changes are enough:
+
+1. **Project foundation** — Laravel/Livewire setup, PostgreSQL Docker Compose or local instructions, baseline CI, factories/seed data, code formatter.
+2. **Atomic bidding core** — migrations, `PlaceBid` action, request validation, idempotency, transactions/locks, and feature tests. This is the important review PR.
+3. **Dealer experience** — Livewire dashboard/listing/bid-history UI, safe feedback states, README/screenshots, and deployment notes.
+
+Each pull request should state the user-facing change, the invariant it preserves, how it was tested, and anything intentionally deferred. Attach a short GIF or screenshots to the UI PR. Keep each commit independently understandable; avoid mixing formatting-only churn with the bidding logic.
+
+### GitHub checks that should be visible
+
+Add a GitHub Actions workflow that runs on pull requests and pushes to `main` using a PostgreSQL service container:
+
+- install PHP and Composer dependencies from the lock file;
+- install/build frontend assets if the stack needs it;
+- wait for PostgreSQL and run migrations;
+- run `composer validate --strict`;
+- run `vendor/bin/pint --test`;
+- run the Laravel test suite against PostgreSQL;
+- run static analysis only if it is configured cleanly (for example, Larastan/PHPStan).
+
+The workflow must fail on a test/format error. Do not add a badge or claim a check is passing until it truly is.
+
+### Make the technical story easy to inspect
+
+The README should contain a two-minute reviewer path: open a verified deployed demo if available, or run it locally; try a valid bid and a rejected bid; then find `PlaceBid`, its feature tests, migrations/indexes, and the CI workflow. Include a small architecture diagram or sequence diagram showing the bid transaction and reservation release. Document the deliberate boundary: PostgreSQL is used because SQLite does not demonstrate the intended lock semantics.
+
+Include `CONTRIBUTING.md` with setup, test, formatter, and branch/PR expectations; an `.env.example` with no secrets; and a short PR template that asks for test evidence and scope notes. This is enough process evidence for a small portfolio project.
+
 ## Delivery target
 
-Aim for a functional demo in 1–2 hours. A public deployed URL is better for a recruiter; a GitHub repository with screenshots and a short screen recording is the fallback. Do not delay the follow-up for extras that do not strengthen the core bid flow.
+Aim for a functional local browser demo first. A public deployed URL is better for a recruiter when hosting is actually available and verified; otherwise provide deployment instructions and repository evidence without a placeholder URL or a claim that the app is deployed. Do not delay the follow-up for extras that do not strengthen the core bid flow.
