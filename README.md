@@ -1,17 +1,23 @@
 # Auction Bid Service
 
-Independent portfolio demonstration using fictional auction and inspection data. The Laravel 13 / Livewire 3 app starts with 40 vehicle lots, 10 fictional number plates, 20 demo dealers, deposit-backed bidding, simulated top-ups, two-second polling, and visible bid-change animations. Vehicle photos are representative real models, not photos of the fictional lots. **This project is not affiliated with SellAnyCar.com.**
+[![CI](https://github.com/rohitgulam/sac-auction-bid-service/actions/workflows/ci.yml/badge.svg)](https://github.com/rohitgulam/sac-auction-bid-service/actions/workflows/ci.yml)
+
+**[Open the live demo](https://sac-auction.rohitgulam.com/)** · No account setup required
+
+This is a backend engineering portfolio exercise for hiring review. It demonstrates atomic, deposit-backed bidding and idempotent writes in a Laravel 13 / Livewire 3 application backed by PostgreSQL. The seeded browser demo has 40 vehicle lots, 10 fictional number plates, 20 selectable dealers, simulated wallet top-ups, two-second polling, and visible bid-change animations. Vehicle photos represent real models, not the fictional lots. **This project is not affiliated with SellAnyCar.com.**
 
 The [public Dealer Portal](https://dealers.sellanycar.com/#/en/home) is background for inspected cars, a deposit-backed limit, and 12-minute Live / 72-hour Deal offers. All dealer identities, lots, inspections, bid rules, and top-ups here are independent demo behavior. The project direction is recorded in [the product brief](auction-bid-service-product-brief.md) and [Laravel workflow](laravel-production-workflow.md).
 
-## Two-minute browser review
+## Two-minute review
 
-No deployed URL has been verified. After [local setup](#local-setup), open <http://localhost:8000>:
+Start at the [live demo](https://sac-auction.rohitgulam.com/):
 
 1. The app opens as fictional dealer `D-001` by default. Use the rounded avatar menu to switch dealers. Open a **Live** or **Deal** listing and read its inspection summary, high bid, bidder code, and bid history.
 2. Enter a whole-AED bid above the displayed high bid. The page shows the accepted bid and updated available limit. Try the same or a lower amount to see a business-rule error. The inventory page keeps wallet balances out of view.
 3. Open **Wallet management** from the avatar to see deposit, active reservations, available limit, and a simulated AED 10,000 or AED 50,000 top-up. No money moves.
 4. For a two-browser walkthrough, open the same listing in a second browser or private window, choose `D-002`, and outbid `D-001`. Return to the first window: polling updates the leader, “You” marker, history, and limit within roughly two seconds. On the inventory page, recent bid activity moves the listing card forward; changed values flash. Background tabs may pause polling until visible again.
+
+For the code review, start with [`PlaceBid`](app/Actions/PlaceBid.php), its HTTP and Livewire [feature tests](tests/Feature/BidPlacementTest.php), the [bid transaction diagram](#bid-transaction), the [database migrations](database/migrations), and the [PostgreSQL CI workflow](.github/workflows/ci.yml). The app is a modular monolith; the transaction and data constraints are the main engineering evidence. The [checks and scope limits](#checks-and-scope) distinguish what is tested from what the demo does not implement.
 
 ## Requirements
 
@@ -139,6 +145,6 @@ php artisan test --compact
 npm run build
 ```
 
-CI runs these checks, locked dependency installs, and migrations against a PostgreSQL 17 service on PRs and pushes to `main`. A workflow file is present; this README does not claim a remote run has passed.
+CI runs these checks, locked dependency installs, and migrations against a PostgreSQL 17 service on PRs and pushes to `main`. The badge above links to the current workflow result.
 
 This demo has no real sign-up, payments, upload proof, invoices, email, websockets, proxy bidding, delivery, settlement, or valuation logic. Dealer selection is intentionally passwordless for review. Polling updates visible state about every two seconds while a page is active. There is no cron requirement: a dashboard visit replenishes an expired offer type when needed. Vehicle photos require the public R2 domain.
