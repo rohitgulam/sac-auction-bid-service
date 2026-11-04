@@ -122,13 +122,13 @@ Money is stored as integer AED fils. Available limit is deposit minus active res
 
 On a dashboard visit, [`EnsureOpenOffers`](app/Actions/EnsureOpenOffers.php) creates one new 12-minute Live or 72-hour Deal listing if that type has no open listing. A PostgreSQL advisory transaction lock serializes concurrent checks. It never changes an existing closing time or clears old bids. [`TimedOfferAvailabilityTest`](tests/Feature/TimedOfferAvailabilityTest.php) checks the bid boundary and retained history; [`TimedOfferConcurrencyTest`](tests/Feature/TimedOfferConcurrencyTest.php) starts two independent PostgreSQL-backed dashboard requests together. Bid tests are sequential and do **not** prove simultaneous bid-lock behavior. The concurrency test covers offer replenishment only and skips if `pcntl` is unavailable.
 
-## Vehicle photos and optional R2 publishing
+## Vehicle photos on R2
 
-Forty distinct model-matched vehicle photos are bundled under `public/images/vehicles` so the demo works without cloud credentials. Their photographers, source pages, and licenses are recorded in `config/auction_photos.php` and linked on each listing detail page. Wikimedia Commons 960px thumbnails are used for this demo; the original works remain on Wikimedia Commons. Listings and inspections are fictional.
+Forty distinct model-matched vehicle photos are served from the public `auction-bid-service-photos` R2 bucket at `https://auction-photos.rohitgulam.com`. No vehicle image files are stored in this repository or on the app server. Their photographers, source pages, and licenses are recorded in `config/auction_photos.php` and linked on each listing detail page. Wikimedia Commons 960px thumbnails are used for this demo; the original works remain on Wikimedia Commons. Listings and inspections are fictional.
 
-The forty bundled photos are also published to the `auction-bid-service-photos` R2 bucket at `https://auction-photos.rohitgulam.com`. For a local R2 preview, set `R2_PUBLIC_URL=https://auction-photos.rohitgulam.com` in `.env`; no R2 write credentials are needed to display the published photos. Run `php artisan db:seed --force --no-interaction` once after updating an older demo database to assign the new model/photo pairs to `CAR-001` through `CAR-040`; existing bids and reservations remain intact.
+`R2_PUBLIC_URL` defaults to that public domain and can be overridden in the environment. The browser fetches images directly from R2; the app needs no R2 access keys. Run `php artisan db:seed --force --no-interaction` once after updating an older demo database to assign the new model/photo pairs to `CAR-001` through `CAR-040`; existing bids and reservations remain intact.
 
-To republish the bundled images to Cloudflare R2, set `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_ENDPOINT` in `.env` (the endpoint is `https://<account-id>.r2.cloudflarestorage.com`). Run `php artisan app:publish-vehicle-photos-to-r2 --no-interaction`. After the objects are publicly available, set `R2_PUBLIC_URL` to the bucket's public URL or custom domain and run `php artisan config:clear --no-interaction`. The app then serves vehicle image URLs from R2. Leave `R2_PUBLIC_URL` empty until upload and public access are ready; local images remain the fallback. No credentials are included in this repository.
+If the R2 domain is unavailable, vehicle images will not display. Photo credits and auction data remain available.
 
 ## Checks and scope
 
@@ -141,4 +141,4 @@ npm run build
 
 CI runs these checks, locked dependency installs, and migrations against a PostgreSQL 17 service on PRs and pushes to `main`. A workflow file is present; this README does not claim a remote run has passed.
 
-This demo has no real sign-up, payments, upload proof, invoices, email, websockets, proxy bidding, delivery, settlement, or valuation logic. Dealer selection is intentionally passwordless for review. Polling updates visible state about every two seconds while a page is active. There is no cron requirement: a dashboard visit replenishes an expired offer type when needed. R2 publication is optional; bundled local photos work without cloud credentials.
+This demo has no real sign-up, payments, upload proof, invoices, email, websockets, proxy bidding, delivery, settlement, or valuation logic. Dealer selection is intentionally passwordless for review. Polling updates visible state about every two seconds while a page is active. There is no cron requirement: a dashboard visit replenishes an expired offer type when needed. Vehicle photos require the public R2 domain.

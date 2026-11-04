@@ -28,13 +28,12 @@ class AuctionBrowsingTest extends TestCase
 
     public function test_new_session_opens_the_dashboard_as_the_default_demo_dealer(): void
     {
-        config()->set('filesystems.disks.r2.url', null);
         $this->seed();
 
         $this->get('/')
             ->assertOk()
             ->assertSee('Toyota Corolla')
-            ->assertSee('images/vehicles/corolla.jpg')
+            ->assertSee('auction-photos.rohitgulam.com/vehicles/corolla.jpg')
             ->assertSee('Dealer ID D-001')
             ->assertSee('Independent portfolio demonstration using fictional data.');
 
@@ -43,14 +42,14 @@ class AuctionBrowsingTest extends TestCase
         $this->get(route('wallet.manage'))->assertOk()->assertSee('Your wallet');
     }
 
-    public function test_vehicle_photo_urls_use_local_assets_until_r2_is_configured(): void
+    public function test_vehicle_photo_urls_use_r2(): void
     {
-        config()->set('filesystems.disks.r2.url', null);
+        config()->set('filesystems.disks.r2.url', 'https://auction-photos.rohitgulam.com');
         $listing = AuctionListing::factory()->create();
 
         $this->getJson('/api/v1/listings/'.$listing->id)
             ->assertOk()
-            ->assertJsonPath('data.photo_url', asset('images/vehicles/corolla.jpg'))
+            ->assertJsonPath('data.photo_url', 'https://auction-photos.rohitgulam.com/vehicles/corolla.jpg?v=40-models')
             ->assertJsonPath('data.photo_credit.license', 'CC0');
 
         config()->set('filesystems.disks.r2.url', 'https://photos.example.test');
@@ -83,7 +82,7 @@ class AuctionBrowsingTest extends TestCase
 
         foreach ($vehicles as $vehicle) {
             $this->assertSame(config('auction_photos.'.$vehicle->photo_key.'.model'), $vehicle->title);
-            $this->assertFileExists(public_path('images/vehicles/'.$vehicle->photo_key.'.jpg'));
+            $this->assertStringContainsString('/vehicles/'.$vehicle->photo_key.'.jpg', $vehicle->photoUrl());
         }
     }
 
