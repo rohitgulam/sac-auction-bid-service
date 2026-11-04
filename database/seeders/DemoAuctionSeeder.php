@@ -24,7 +24,7 @@ class DemoAuctionSeeder extends Seeder
                 'Copper Gate Motors', 'Skyline Motor Yard', 'Dunecrest Auto', 'Silver Harbor Motors',
             ];
 
-            if (AuctionListing::query()->exists()) {
+            if (AuctionListing::query()->where('lot_number', 'CAR-001')->exists()) {
                 foreach ($dealerNames as $index => $name) {
                     Dealer::query()->where('code', sprintf('D-%03d', $index + 1))->update(['name' => $name]);
                 }

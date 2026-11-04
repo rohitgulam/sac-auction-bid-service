@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\EnsureOpenOffers;
 use App\Livewire\AuctionDashboard;
 use App\Livewire\DemoDealerChooser;
 use App\Livewire\ProfileMenu;
@@ -67,6 +68,20 @@ class AuctionBrowsingTest extends TestCase
         $this->getJson('/api/v1/listings?kind=plate')->assertOk()->assertJsonCount(10, 'data');
         $this->getJson('/api/v1/listings?status=open')->assertOk()->assertJsonCount(40, 'data');
         $this->getJson('/api/v1/listings?status=closed')->assertOk()->assertJsonCount(10, 'data');
+        $this->assertSame(20, Dealer::query()->count());
+    }
+
+    public function test_seeding_after_dashboard_created_offers_still_creates_demo_inventory(): void
+    {
+        app(EnsureOpenOffers::class)->handle();
+
+        $this->assertSame(2, AuctionListing::query()->count());
+
+        $this->seed();
+
+        $this->assertSame(52, AuctionListing::query()->count());
+        $this->assertSame(40, AuctionListing::query()->where('lot_number', 'like', 'CAR-%')->count());
+        $this->assertSame(10, AuctionListing::query()->where('lot_number', 'like', 'PLT-%')->count());
         $this->assertSame(20, Dealer::query()->count());
     }
 
