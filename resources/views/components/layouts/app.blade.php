@@ -16,12 +16,9 @@
 <body class="min-h-screen bg-[#f4f7f9] font-sans text-slate-900 antialiased">
     <header class="border-b border-slate-200 bg-white">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 text-navy no-underline">
-                <span class="flex h-10 w-10 items-center justify-center bg-blue-600 text-lg font-bold text-white">A</span>
-                <span>
-                    <strong class="block text-base leading-tight tracking-tight">Auction Bid Service</strong>
-                    <small class="block text-xs font-medium text-slate-500">Independent dealer demo</small>
-                </span>
+            <a href="{{ route('dashboard') }}" class="flex min-w-0 flex-col items-start no-underline" aria-label="Auction Bid Service mock demo home">
+                <img src="https://dealers.sellanycar.com/assets/images/en_dealerlogo.jpg" alt="SellAnyCar Dealer Portal" width="993" height="293" class="h-auto w-32 sm:w-36" decoding="async">
+                <span class="mt-1 block text-[0.65rem] font-semibold leading-tight text-navy sm:text-xs">Auction Bid Service · Mock demo</span>
             </a>
             <livewire:profile-menu />
         </div>
