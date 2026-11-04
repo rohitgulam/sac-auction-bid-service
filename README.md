@@ -55,7 +55,7 @@ openssl rand -hex 32    # Use this value for DB_PASSWORD.
 nano .env.production
 ```
 
-Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://auction.rohitgulam.com`, `APP_KEY`, `DB_HOST=postgres`, `DB_PORT=5432`, `DB_DATABASE=auction_bid_service`, `DB_USERNAME=auction_bid_service`, `DB_PASSWORD`, `SESSION_SECURE_COOKIE=true`, `TRUSTED_PROXIES=*`, and `R2_PUBLIC_URL=https://auction-photos.rohitgulam.com`. Keep `SESSION_DRIVER=file`, `CACHE_STORE=file`, and `QUEUE_CONNECTION=sync`. Never commit `.env.production` or regenerate `APP_KEY` after users have sessions.
+Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://sac-auction.rohitgulam.com`, `APP_KEY`, `DB_HOST=postgres`, `DB_PORT=5432`, `DB_DATABASE=auction_bid_service`, `DB_USERNAME=auction_bid_service`, `DB_PASSWORD`, `SESSION_SECURE_COOKIE=true`, `TRUSTED_PROXIES=*`, and `R2_PUBLIC_URL=https://auction-photos.rohitgulam.com`. Keep `SESSION_DRIVER=file`, `CACHE_STORE=file`, and `QUEUE_CONNECTION=sync`. Never commit `.env.production` or regenerate `APP_KEY` after users have sessions.
 
 ```sh
 sudo docker compose --env-file .env.production -f compose.production.yaml config --quiet
@@ -66,12 +66,12 @@ sudo docker compose --env-file .env.production -f compose.production.yaml exec a
 curl --fail http://127.0.0.1:8088/up
 ```
 
-Run the seeder on the first deployment. Later deploys use `git pull --ff-only`, `up -d --build`, `migrate --force`, and `optimize`; keep the database and app storage volumes. To expose the app, create a Cloudflare DNS `A` record for `auction.rohitgulam.com` pointing to the VPS. Use DNS-only mode while obtaining the first certificate. Add this host Nginx virtual host at `/etc/nginx/sites-available/auction.rohitgulam.com` and enable it in `sites-enabled`:
+Run the seeder on the first deployment. Later deploys use `git pull --ff-only`, `up -d --build`, `migrate --force`, and `optimize`; keep the database and app storage volumes. To expose the app, create a Cloudflare DNS `A` record for `sac-auction.rohitgulam.com` pointing to the VPS. Use DNS-only mode while obtaining the first certificate. Add this host Nginx virtual host at `/etc/nginx/sites-available/sac-auction.rohitgulam.com` and enable it in `sites-enabled`:
 
 ```nginx
 server {
     listen 80;
-    server_name auction.rohitgulam.com;
+    server_name sac-auction.rohitgulam.com;
 
     location / {
         proxy_pass http://127.0.0.1:8088;
@@ -83,7 +83,7 @@ server {
 }
 ```
 
-Test with `sudo nginx -t`, reload Nginx, then obtain HTTPS with the existing Certbot Nginx integration: `sudo certbot --nginx -d auction.rohitgulam.com`. Ensure ports 80 and 443 reach Nginx. The Docker network and `TRUSTED_PROXIES=*` setting assume the app's only inbound path is the localhost-bound host proxy. Verify `https://auction.rohitgulam.com/up` and a two-browser bid before publishing the demo URL.
+Test with `sudo nginx -t`, reload Nginx, then obtain HTTPS with the existing Certbot Nginx integration: `sudo certbot --nginx -d sac-auction.rohitgulam.com`. Ensure ports 80 and 443 reach Nginx. The Docker network and `TRUSTED_PROXIES=*` setting assume the app's only inbound path is the localhost-bound host proxy. Verify `https://sac-auction.rohitgulam.com/up` and a two-browser bid before publishing the demo URL.
 
 Keep off-server PostgreSQL backups. For example, run `pg_dump -Fc` inside the `postgres` service and copy the dump to protected storage; Docker volumes alone are not a backup.
 
