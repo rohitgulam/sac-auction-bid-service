@@ -57,7 +57,7 @@ class AuctionBrowsingTest extends TestCase
 
         $this->getJson('/api/v1/listings/'.$listing->id)
             ->assertOk()
-            ->assertJsonPath('data.photo_url', 'https://photos.example.test/vehicles/corolla.jpg');
+            ->assertJsonPath('data.photo_url', 'https://photos.example.test/vehicles/corolla.jpg?v=40-models');
     }
 
     public function test_seeded_inventory_has_vehicle_plate_and_offer_states(): void
@@ -69,6 +69,42 @@ class AuctionBrowsingTest extends TestCase
         $this->getJson('/api/v1/listings?status=open')->assertOk()->assertJsonCount(40, 'data');
         $this->getJson('/api/v1/listings?status=closed')->assertOk()->assertJsonCount(10, 'data');
         $this->assertSame(20, Dealer::query()->count());
+    }
+
+    public function test_each_seeded_vehicle_has_a_distinct_model_matched_photo(): void
+    {
+        $this->seed();
+
+        $vehicles = AuctionListing::query()->where('kind', 'vehicle')->get();
+
+        $this->assertCount(40, $vehicles);
+        $this->assertSame(40, $vehicles->pluck('title')->unique()->count());
+        $this->assertSame(40, $vehicles->pluck('photo_key')->unique()->count());
+
+        foreach ($vehicles as $vehicle) {
+            $this->assertSame(config('auction_photos.'.$vehicle->photo_key.'.model'), $vehicle->title);
+            $this->assertFileExists(public_path('images/vehicles/'.$vehicle->photo_key.'.jpg'));
+        }
+    }
+
+    public function test_reseeding_updates_existing_vehicle_photos_without_changing_bid_history(): void
+    {
+        $this->seed();
+
+        $vehicle = AuctionListing::query()->where('lot_number', 'CAR-009')->firstOrFail();
+        $bidIds = $vehicle->bids()->pluck('id')->all();
+        $reservationIds = BidReservation::query()->where('auction_listing_id', $vehicle->id)->pluck('id')->all();
+
+        $vehicle->update(['title' => 'Toyota Corolla', 'photo_key' => 'corolla']);
+
+        $this->seed();
+
+        $vehicle->refresh();
+
+        $this->assertSame('Hyundai Tucson', $vehicle->title);
+        $this->assertSame('tucson', $vehicle->photo_key);
+        $this->assertSame($bidIds, $vehicle->bids()->pluck('id')->all());
+        $this->assertSame($reservationIds, BidReservation::query()->where('auction_listing_id', $vehicle->id)->pluck('id')->all());
     }
 
     public function test_live_offer_status_matches_its_open_window(): void

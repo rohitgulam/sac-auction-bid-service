@@ -124,9 +124,9 @@ On a dashboard visit, [`EnsureOpenOffers`](app/Actions/EnsureOpenOffers.php) cre
 
 ## Vehicle photos and optional R2 publishing
 
-Six representative vehicle photos are bundled under `public/images/vehicles` so the demo works without cloud credentials. Their photographers, source pages, and licenses are recorded in `config/auction_photos.php` and linked on each listing detail page. Images were resized to 960px for this demo; the original works remain on Wikimedia Commons. Listings and inspections are fictional.
+Forty distinct model-matched vehicle photos are bundled under `public/images/vehicles` so the demo works without cloud credentials. Their photographers, source pages, and licenses are recorded in `config/auction_photos.php` and linked on each listing detail page. Wikimedia Commons 960px thumbnails are used for this demo; the original works remain on Wikimedia Commons. Listings and inspections are fictional.
 
-The six bundled photos are also published to the `auction-bid-service-photos` R2 bucket at `https://auction-photos.rohitgulam.com`. For a local R2 preview, set `R2_PUBLIC_URL=https://auction-photos.rohitgulam.com` in `.env`; no R2 write credentials are needed to display the published photos.
+The forty bundled photos are also published to the `auction-bid-service-photos` R2 bucket at `https://auction-photos.rohitgulam.com`. For a local R2 preview, set `R2_PUBLIC_URL=https://auction-photos.rohitgulam.com` in `.env`; no R2 write credentials are needed to display the published photos. Run `php artisan db:seed --force --no-interaction` once after updating an older demo database to assign the new model/photo pairs to `CAR-001` through `CAR-040`; existing bids and reservations remain intact.
 
 To republish the bundled images to Cloudflare R2, set `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_ENDPOINT` in `.env` (the endpoint is `https://<account-id>.r2.cloudflarestorage.com`). Run `php artisan app:publish-vehicle-photos-to-r2 --no-interaction`. After the objects are publicly available, set `R2_PUBLIC_URL` to the bucket's public URL or custom domain and run `php artisan config:clear --no-interaction`. The app then serves vehicle image URLs from R2. Leave `R2_PUBLIC_URL` empty until upload and public access are ready; local images remain the fallback. No credentials are included in this repository.
 

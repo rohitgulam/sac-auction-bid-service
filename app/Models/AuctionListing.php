@@ -75,7 +75,7 @@ class AuctionListing extends Model
         $r2PublicUrl = config('filesystems.disks.r2.url');
 
         return $r2PublicUrl
-            ? rtrim($r2PublicUrl, '/').'/vehicles/'.$this->photo_key.'.jpg'
+            ? rtrim($r2PublicUrl, '/').'/vehicles/'.$this->photo_key.'.jpg?v=40-models'
             : asset('images/vehicles/'.$this->photo_key.'.jpg');
     }
 

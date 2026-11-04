@@ -29,6 +29,17 @@ class DemoAuctionSeeder extends Seeder
                     Dealer::query()->where('code', sprintf('D-%03d', $index + 1))->update(['name' => $name]);
                 }
 
+                $vehiclePhotos = collect(config('auction_photos'));
+
+                for ($number = 1; $number <= 40; $number++) {
+                    $photoKey = $vehiclePhotos->keys()[$number - 1];
+
+                    AuctionListing::query()
+                        ->where('lot_number', sprintf('CAR-%03d', $number))
+                        ->where('kind', 'vehicle')
+                        ->update(['title' => $vehiclePhotos[$photoKey]['model'], 'photo_key' => $photoKey]);
+                }
+
                 return;
             }
 
@@ -47,7 +58,7 @@ class DemoAuctionSeeder extends Seeder
             for ($number = 1; $number <= 40; $number++) {
                 $offerType = $number <= 16 ? 'live' : 'deal';
                 $isClosed = $number > 32;
-                $photoKey = $vehiclePhotos->keys()[($number - 1) % $vehiclePhotos->count()];
+                $photoKey = $vehiclePhotos->keys()[$number - 1];
                 $listing = AuctionListing::query()->create([
                     'lot_number' => sprintf('CAR-%03d', $number),
                     'kind' => 'vehicle',
