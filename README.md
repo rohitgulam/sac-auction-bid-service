@@ -47,51 +47,7 @@ Run `createdb` only once per new Docker volume. `phpunit.xml` points tests to `s
 
 Laravel uses file sessions and cache plus a synchronous queue. The application database holds the seeded auction data.
 
-## Ubuntu VPS deployment
-
-The production Compose file runs PHP 8.4/Apache and PostgreSQL 17 separately from the local development stack. The application listens only on `127.0.0.1:8088`; PostgreSQL has no published port. On a VPS with host Nginx already serving other sites, add a new virtual host instead of replacing the existing configuration.
-
-```sh
-git clone https://github.com/rohitgulam/sac-auction-bid-service.git
-cd sac-auction-bid-service
-umask 077
-cp .env.example .env.production
-openssl rand -base64 32 # Prefix this value with base64: for APP_KEY.
-openssl rand -hex 32    # Use this value for DB_PASSWORD.
-nano .env.production
-```
-
-Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://sac-auction.rohitgulam.com`, `APP_KEY`, `DB_HOST=postgres`, `DB_PORT=5432`, `DB_DATABASE=auction_bid_service`, `DB_USERNAME=auction_bid_service`, `DB_PASSWORD`, `SESSION_SECURE_COOKIE=true`, `TRUSTED_PROXIES=*`, and `R2_PUBLIC_URL=https://auction-photos.rohitgulam.com`. Keep `SESSION_DRIVER=file`, `CACHE_STORE=file`, and `QUEUE_CONNECTION=sync`. Never commit `.env.production` or regenerate `APP_KEY` after users have sessions.
-
-```sh
-sudo docker compose --env-file .env.production -f compose.production.yaml config --quiet
-sudo docker compose --env-file .env.production -f compose.production.yaml up -d --build
-sudo docker compose --env-file .env.production -f compose.production.yaml exec app php artisan migrate --force --no-interaction
-sudo docker compose --env-file .env.production -f compose.production.yaml exec app php artisan db:seed --force --no-interaction
-sudo docker compose --env-file .env.production -f compose.production.yaml exec app php artisan optimize --no-interaction
-curl --fail http://127.0.0.1:8088/up
-```
-
-Run the seeder on the first deployment. Later deploys use `git pull --ff-only`, `up -d --build`, `migrate --force`, and `optimize`; keep the database and app storage volumes. To expose the app, create a Cloudflare DNS `A` record for `sac-auction.rohitgulam.com` pointing to the VPS. Use DNS-only mode while obtaining the first certificate. Add this host Nginx virtual host at `/etc/nginx/sites-available/sac-auction.rohitgulam.com` and enable it in `sites-enabled`:
-
-```nginx
-server {
-    listen 80;
-    server_name sac-auction.rohitgulam.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8088;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Port $server_port;
-    }
-}
-```
-
-Test with `sudo nginx -t`, reload Nginx, then obtain HTTPS with the existing Certbot Nginx integration: `sudo certbot --nginx -d sac-auction.rohitgulam.com`. Ensure ports 80 and 443 reach Nginx. The Docker network and `TRUSTED_PROXIES=*` setting assume the app's only inbound path is the localhost-bound host proxy. Verify `https://sac-auction.rohitgulam.com/up` and a two-browser bid before publishing the demo URL.
-
-Keep off-server PostgreSQL backups. For example, run `pg_dump -Fc` inside the `postgres` service and copy the dump to protected storage; Docker volumes alone are not a backup.
+## Demo behavior and API
 
 The inventory dashboard does not show wallet balances. The bid form shows only the available limit needed to judge a bid. Full wallet balances, simulated top-ups, and wallet activity live on the Wallet management page. Public bid history displays bidder codes, not dealership names.
 
